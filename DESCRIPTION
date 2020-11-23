@@ -1,15 +1,14 @@
 Package: acutilsLite
-Title: What the Package Does (One Line, Title Case)
+Title: A package for working with CPE databases
 Version: 0.0.0.9000
 Authors@R: 
-    person(given = "First",
-           family = "Last",
+    person(given = "Sam",
+           family = "Turner",
            role = c("aut", "cre"),
-           email = "first.last@example.com",
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to
-    pick a license
+           email = "samturner0306@gmail.com.com")
+
+Description: Functions for reading in and manipulating CPE databases...
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
