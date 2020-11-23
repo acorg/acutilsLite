@@ -1,5 +1,5 @@
 Package: acutilsLite
-Title: A package for working with CPE databases
+Title: A package for working with CPE databases. This is a simplified version of Sam W's acutils package.
 Version: 0.0.0.9000
 Authors@R: 
     person(given = "Sam",
