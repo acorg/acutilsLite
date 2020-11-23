@@ -1,0 +1,27 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# acutilsLite
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+A simplified and soon-to-be tested and documented version of acutils. Provides functions for working with the json databases. 
+
+The package can be installed with:
+``` r
+# install.packages("devtools")
+devtools::install_github("acorg/acutilsLite")
+```
