@@ -143,14 +143,14 @@ agdb.ag <- function(id,
       ag$parent_id   <- parent_id
       agids          <- lapply(agdb, function(x){ x$id })
       if(sum(agids == parent_id) != 1) stop("No corresponding parent antigen found")
-      parent.env(ag) <- agdb[[which(agids == parent_id)]]
+      ag[[".parent"]] <- agdb[[which(agids == parent_id)]]
     }
   }
 
   # Link a parent antigen if specified
   if(!is.null(.parent)){
     ag$parent_id <- .parent$id
-    parent.env(ag) <- .parent
+    ag[[".parent"]] <- .parent
   }
 
   ag
