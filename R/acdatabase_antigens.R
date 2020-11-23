@@ -1,5 +1,85 @@
-# Function to generate a new database
+
+#' Antigen database
+#'
+#'@details
+#' The antigen database is ultimately stored as a json file with fields:
+#' 1. id
+#' 2. strain
+#' 3. long
+#' 4. aliases
+#' 5. wildtype
+#' 6. type
+#' 7. subtype
+#' 8. lineage
+#' 9. isolation
+#' 10. genes
+#' 11. parent_id
+#' 12. alterations
+#' 13. passage
+#' 14. comments
+#' 15. groups
+#' 16. meta
+#'
+#' Not all fields are filled for all antigens.
+#'
+#' In R, this is converted to a list of environments (see ?ag) with the above fields, plus:
+#' 1. A ag$.parent entry, which is the database entry for the parent antigen (defined by the backbone).
+#' 2. ag$alteration$.parent entries for each gene that is not inherited from ag$.parent (for recombinant viruses).
+#'
+#' @name agdb
+NULL
+
+
+
+#' Antigen
+#'
+#'@details
+#' An antigen entry (ag) is an environment containing some of:
+#'
+#'
+#'\tabular{ll}{
+#' id   \tab  Antigen id: 6 random capital letters and numbers \cr
+#' strain \tab  one two three four five six seven eight nine ten eleven twelve thriteen one two three four five six seven eight nine ten eleven twelve thriteen \cr
+#' long \tab Full strain name. \cr
+#' aliases \tab Other names known to be used to refere to this antigen. \cr
+#' wildtype \tab Boolean: whether the strain is wildtype. \cr
+#' type \tab Influenza virus type (A, B...) \cr
+#' subtype \tab Influenza virus subtype (H3N2, H1N1...) \cr
+#' lineage \tab Victoria etc \cr
+#' isolation \tab list containing isolation id, location, date, cell, continent \cr
+#' genes \tab gene sequence for HA/NA \cr
+#' parent_id \tab id of parent (by backbone) \cr
+#' .parent \tab the database entry for the parent antigen (by backbone) \cr
+#' alterations \tab alterations to parent (substitutions or gene transplants), organised by gene. Substitutions formatted as X123Y, transgenes identified by parent id. alterattion$.parent is the database entry for the gene origin when the alteration is a transplant.  \cr
+#' passage \tab passaging history \cr
+#' comments \tab Extra commetns - eg which study the antigen comes from \cr
+#' groups \tab Useful annotations. For example: wildtype, mutatant, gen 1 root, gen 2 mutant, 3C.3A etc.  \cr
+#' meta \tab Some extra data about the antigen: cluster, mutant generation number, whether it is a reference strain \cr
+#' }
+#'
+#' Notably, the parent environment is always the empty environment; $.parent is the backbone-wise parent antigen entry; alteration$.parent is the origin antigen for a transplanted gene
+#'
+#' It has classes c("acdatabase.ag", "acdatabase.entry", "environment")
+#' @name ag
+NULL
+
+#' Create antigen database
+#'
+#' Creates an antigen database from a list of antigen entries. For information on database structure, see ?agdb.
+#'
+#' @param db list
+#'
+#' @return environment
 #' @export
+#'
+#' @examples
+#' # load database
+#' package_path = system.file(package = "acutilsLite")
+#' db_path = paste0(package_path, "/tests/testthat/testdata/agdb_h3_small.json")
+#' print(db_path)
+#' library(jsonlite)
+#' db_list = read_json(db_path)
+#' db <- agdb.new(db_list)
 agdb.new <- function(db = list()){
 
   # Fetch antigen ids
@@ -44,8 +124,16 @@ agdb.new <- function(db = list()){
 
 
 
-# Append an antigen to an antigen db
+#' Append an antigen to an agdb
+#'
+#'
+#' @param agdb list
+#' @param ag environment
+#'
+#' @return list
 #' @export
+#'
+#' @examples
 agdb.append <- function(agdb, ag){
 
   # Check for duplicate antigens
@@ -67,8 +155,18 @@ agdb.append <- function(agdb, ag){
 
 
 
-# Function to generate an id
+#' Function to generate an id
+#'
+#' Generates a random id (6 capital letters and numbers) which is not seen in the provided agdb or excluded_ids
+#'
+#' @param agdb list
+#' @param id should be left NULL
+#' @param excluded_ids character (optional) a vector of ids which should not be assigned
+#'
+#' @return character
 #' @export
+#'
+#' @examples
 agdb.id <- function(db, id = NULL, excluded_ids = NULL){
 
   # Add database ids to excluded ids
@@ -90,8 +188,20 @@ agdb.id <- function(db, id = NULL, excluded_ids = NULL){
 
 
 
-# Functions to generate records for the database
+
+#' Produce an antigen entry for the database
+#'
+#' Produces an entry for antigen databases (see ?agdb) from the passed data.
+#' The antigen is represented by an environment with additional classes "acdatabase.ag" and "acdatabase.entry"
+#'
+#' @param agdb list
+#' @param id should be left NULL
+#' @param excluded_ids character (optional) a vector of ids which should not be assigned
+#'
+#' @return character
 #' @export
+#'
+#' @examples
 agdb.ag <- function(id,
                     strain,
                     long,
