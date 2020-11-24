@@ -39,9 +39,9 @@ NULL
 #'
 #'\tabular{ll}{
 #' id   \tab  Antigen id: 6 random capital letters and numbers \cr
-#' strain \tab  one two three four five six seven eight nine ten eleven twelve thriteen one two three four five six seven eight nine ten eleven twelve thriteen \cr
+#' strain \tab  Rarely used. \cr
 #' long \tab Full strain name. \cr
-#' aliases \tab Other names known to be used to refere to this antigen. \cr
+#' aliases \tab Other names known to be used to refer to this antigen. \cr
 #' wildtype \tab Boolean: whether the strain is wildtype. \cr
 #' type \tab Influenza virus type (A, B...) \cr
 #' subtype \tab Influenza virus subtype (H3N2, H1N1...) \cr
@@ -52,7 +52,7 @@ NULL
 #' .parent \tab the database entry for the parent antigen (by backbone) \cr
 #' alterations \tab alterations to parent (substitutions or gene transplants), organised by gene. Substitutions formatted as X123Y, transgenes identified by parent id. alterattion$.parent is the database entry for the gene origin when the alteration is a transplant.  \cr
 #' passage \tab passaging history \cr
-#' comments \tab Extra commetns - eg which study the antigen comes from \cr
+#' comments \tab Extra comments - eg which study the antigen comes from \cr
 #' groups \tab Useful annotations. For example: wildtype, mutatant, gen 1 root, gen 2 mutant, 3C.3A etc.  \cr
 #' meta \tab Some extra data about the antigen: cluster, mutant generation number, whether it is a reference strain \cr
 #' }
@@ -63,136 +63,40 @@ NULL
 #' @name ag
 NULL
 
-#' Create antigen database
+
+
+
+
+
+
+
+
+
+##########################
+#
+#    CONSTRUCTORS AND CHECKERS
+#
+##########################
+
+#' Check if a condition is fulfilled
 #'
-#' Creates an antigen database from a list of antigen entries. For information on database structure, see ?agdb.
+#' Checks if checker_fn returns TRUE when passed arguments '...'. Otherwise throws error.
 #'
-#' @param db list
+#' @param checker_fn function: a boolean valued function checking if a condition is fulfilled by the arguments ...
+#' @param ... arguments to checker_fn
 #'
-#' @return environment
+#' @return bool
 #' @export
-#'
-#' @examples
-#' # load database
-#' package_path = system.file(package = "acutilsLite")
-#' db_path = paste0(package_path, "/tests/testthat/testdata/agdb_h3_small.json")
-#' print(db_path)
-#' library(jsonlite)
-#' db_list = read_json(db_path)
-#' db <- agdb.new(db_list)
-agdb.new <- function(db = list()){
-
-  # Fetch antigen ids
-  agids <- lapply(db, function(x){ x$id })
-
-  # Convert any object to environments
-  db <- lapply(db, function(x){
-    x <- as.environment(x)
-    class(x) <- c("acdatabase.ag", "acdatabase.entry", "environment")
-    x
-  })
-
-  # Link parent environments
-  lapply(db, function(db.ag){
-    parent.env(db.ag) <- emptyenv()
-    if(!is.null(db.ag$parent_id)){
-      matched_parent <- which(agids == db.ag$parent_id)
-      if(length(matched_parent) >  1) stop(sprintf("Multiple parents '%s' found for '%s'", db.ag$parent_id, db.ag$id))
-      if(length(matched_parent) == 0) stop(sprintf("Parents '%s' not found for '%s'", db.ag$parent_id, db.ag$id))
-      db.ag[[".parent"]] <- db[[matched_parent]]
-    }
-  })
-
-  # Link alteration environments
-  lapply(db, function(db.ag){
-    if(!is.null(db.ag[["alterations"]])){
-      db.ag[["alterations"]] <- lapply(db.ag[["alterations"]], function(alteration){
-        if(!is.null(alteration[["parent_id"]])){
-          matched_parent <- which(agids == alteration[["parent_id"]])
-          alteration[[".parent"]] <- db[[matched_parent]]
-        }
-        alteration
-      })
-    }
-  })
-
-  # Return the database
-  db
-
+check_condition <- function(checker_fn, ...){
+  fn_char = as.character(enexpr(checker_fn))
+  if (!((checker_fn(...)))) stop('Error in ', fn_char)
+  return(T)
 }
-
-
-
-
-#' Append an antigen to an agdb
-#'
-#'
-#' @param agdb list
-#' @param ag environment
-#'
-#' @return list
-#' @export
-#'
-#' @examples
-agdb.append <- function(agdb, ag){
-
-  # Check for duplicate antigens
-  duplicates <- do.call(
-    agdb.find,
-    c(list(db = agdb), as.list(ag))
-  )
-
-  # Stop if duplicates are found
-  if(sum(duplicates) > 0) stop("A duplicate antigen was found")
-
-  # Otherwise append as normal
-  append(agdb, ag)
-
-}
-
-
-
-
-
-
-#' Function to generate an id
-#'
-#' Generates a random id (6 capital letters and numbers) which is not seen in the provided agdb or excluded_ids
-#'
-#' @param agdb list
-#' @param id should be left NULL
-#' @param excluded_ids character (optional) a vector of ids which should not be assigned
-#'
-#' @return character
-#' @export
-#'
-#' @examples
-agdb.id <- function(db, id = NULL, excluded_ids = NULL){
-
-  # Add database ids to excluded ids
-  if(!missing(db)) excluded_ids <- c(unlist(db%$%id), excluded_ids)
-
-  # Keep cycling until a unique id is found
-  while(is.null(id) || id %in% excluded_ids){
-    id <- paste(
-      c(LETTERS, 0:9)[sample(1:36, 6, TRUE)],
-      collapse = ""
-    )
-  }
-
-  # Return the id
-  id
-
-}
-
-
-
 
 
 #' Produce an antigen entry for the database
 #'
 #' Produces an entry for antigen databases (see ?agdb) from the passed data.
-#' The antigen is represented by an environment with additional classes "acdatabase.ag" and "acdatabase.entry"
 #'
 #' @param agdb list
 #' @param id should be left NULL
@@ -268,9 +172,216 @@ agdb.ag <- function(id,
 }
 
 
-
-# Isolation data
+#' Check antigen entry formatting
+#'
+#' Checks that a proposed antigen entry follows the formatting rules. See ?ag for more details on antigen objects.
+#'
+#' @details
+#' The following are currently checked:
+#' 1. class is c("acdatabase.ag", "acdatabase.entry", "environment")
+#' 2. only permitted fields are entered
+#' 3. all names (strain, long. type, subtype, lineage) are characters
+#' 4. construct checkers are fulfilled for : id, parent_id, alterations, genes, isolation, passage, .parent.
+#' @param ag environment: a proposed antigen entry
+#' @param null_permitted bool: whether NULL should return T or F
+#' @return bool
 #' @export
+#'
+#' @examples
+agdb.checkAG <- function(ag, null_permitted = F){
+
+  if (is.null(ag)) return(null_permitted)
+
+  # class:
+  if (!(setequal( class(ag), c("acdatabase.ag", "acdatabase.entry", "environment") ))) stop('class must be  c("acdatabase.ag", "acdatabase.entry", "environment")')
+
+  # fields
+  permitted_fields = c('id', 'strain', 'long', 'aliases', 'wildtype', 'type', 'subtype', 'lineage', 'isolation', 'genes', 'parent_id', 'alterations', 'passage', 'comments', 'groups', 'meta')
+  if (!(all(names(ag) %in% permitted_fields))) stop('Unpermitted fields in ', names(ag))
+
+
+  # strain, long, wildtype, type, subtype, lineage
+  if (!(all(unlist(lapply(ag[c('strain', 'long', 'type', 'subtype', 'lineage')],
+                   function(x){(typeof(x) == "character" | is.null(x))})))) ) {
+    stop('all names must be char type')
+  }
+
+  # aliases
+  if (!(all(unlist(lapply(ag$aliases, is.character))))) stop('all aliases must be char type')
+
+  # id
+  check_condition(agdb.checkid, ag$id)
+
+  # isolation
+  check_condition(agdb.checkisolation, ag$isolation)
+
+  # genes
+  check_condition(agdb.checkgenes, ag$genes)
+
+  # parent_id
+  check_condition(agdb.checkid, ag$parent_id, null_permitted = T)
+
+  # alterations
+  check_condition(agdb.checkalterations, ag$alterations)
+
+  # passage
+  check_condition(agdb.checkpassage, ag$passage)
+
+
+  # .parent
+  check_condition(agdb.checkAG, ag$.parent, null_permitted = T)
+
+  return(T)
+}
+
+
+
+
+
+#' Create antigen database
+#'
+#' Creates an antigen database from a list of antigen entries. For information on database structure, see ?agdb.
+#'
+#' @param db list
+#'
+#' @return environment
+#' @export
+#'
+#' @examples
+agdb.new <- function(db = list()){
+
+  # Fetch antigen ids
+  agids <- lapply(db, function(x){ x$id })
+
+  # Convert any object to environments
+  db <- lapply(db, function(x){
+    x <- as.environment(x)
+    class(x) <- c("acdatabase.ag", "acdatabase.entry", "environment")
+    x
+  })
+
+  # Link parent environments
+  lapply(db, function(db.ag){
+    parent.env(db.ag) <- emptyenv()
+    if(!is.null(db.ag$parent_id)){
+      matched_parent <- which(agids == db.ag$parent_id)
+      if(length(matched_parent) >  1) stop(sprintf("Multiple parents '%s' found for '%s'", db.ag$parent_id, db.ag$id))
+      if(length(matched_parent) == 0) stop(sprintf("Parents '%s' not found for '%s'", db.ag$parent_id, db.ag$id))
+      db.ag[[".parent"]] <- db[[matched_parent]]
+    }
+  })
+
+  # Link alteration environments
+  lapply(db, function(db.ag){
+    if(!is.null(db.ag[["alterations"]])){
+      db.ag[["alterations"]] <- lapply(db.ag[["alterations"]], function(alteration){
+        if(!is.null(alteration[["parent_id"]])){
+          matched_parent <- which(agids == alteration[["parent_id"]])
+          alteration[[".parent"]] <- db[[matched_parent]]
+        }
+        alteration
+      })
+    }
+  })
+
+  # Return the database
+  db
+
+}
+
+
+#' Checks Antigen Database formatting
+#'
+#' Checks that an antigen database follows the formatting rules. For information on database structure, see ?agdb.
+#'
+#' @details
+#' The following rules are currently checked:
+#' 1. All entries are antigens (see ?agddb.checkAG)
+#' @param agdb list
+#'
+#' @return bool
+#' @export
+#'
+#' @examples
+agdb.checkagdb <- function(agdb){
+  return(lapply(agdb, agdb.checkAG))
+}
+
+
+
+
+
+#' Generate an id
+#'
+#' Generates a random id (6 capital letters and numbers) which is not seen in the provided agdb or excluded_ids
+#'
+#' @param agdb list
+#' @param id should be left NULL
+#' @param excluded_ids char (optional): a vector of ids which should not be assigned
+#'
+#' @return character
+#' @export
+#'
+#' @examples
+agdb.id <- function(db, id = NULL, excluded_ids = NULL){
+
+  # Add database ids to excluded ids
+  if(!missing(db)) excluded_ids <- c(unlist(db%$%id), excluded_ids)
+
+  # Keep cycling until a unique id is found
+  while(is.null(id) || id %in% excluded_ids){
+    id <- paste(
+      c(LETTERS, 0:9)[sample(1:36, 6, TRUE)],
+      collapse = ""
+    )
+  }
+
+  # Return the id
+  id
+
+}
+
+#' Check an id
+#'
+#' Checks if a proposed id follows the formatting rules.
+#'
+#' @details
+#' The following rules are currently checked:
+#' 1. id is be character type
+#' 2. id has length 6
+#' 3. all characters are capital letters or numerals 0:9
+#'
+#' @param id char: A proposed id
+#' @param null_permitted bool: whether NULL should return T or F
+#'
+#' @return character
+#' @export
+#'
+#' @examples
+agdb.checkid <- function(id, null_permitted = F){
+  if (is.null(id)) return(null_permitted)
+  if (!is.character(id)) return(F)
+  split_id = strsplit(id, split = '')[[1]]
+  A = length(split_id) == 6
+  B = all(unlist(lapply( split_id, function(x){x %in% c(LETTERS, 0:9)})))
+  return(A & B)
+}
+
+
+#' Constructs  an antigen isolation entry
+#'
+#' Constructs an antigen isolation entry. All params are optional
+#'
+#' @param id char: the isolation id
+#' @param date char: the year of the isolation
+#' @param cell char: cell or eg passaging?
+#' @param location char#
+#' @param continent char
+#'
+#' @return list
+#' @export
+#'
+#' @examples
 agdb.isolation <- function(id,
                            date,
                            cell,
@@ -287,17 +398,49 @@ agdb.isolation <- function(id,
 
 }
 
-
-
-
-
-# Genetic data
+#' Check an antigen isolation entry
+#'
+#' Checks if a proposed isolation entry follows the formatting rules.
+#'
+#' @details
+#' The following rules are currently checked:
+#' 1. isolation is a list
+#' 2. only permitted fields are present
+#'
+#' @param isolation char: A proposed isolation entry
+#' @param null_permitted bool: whether NULL should return T or F
+#'
+#' @return character
 #' @export
+#'
+#' @examples
+agdb.checkisolation <- function(isolation){
+  if (is.null(isolation)) return (T)
+  A = typeof(isolation) == 'list'
+  B = all(names(isolation) %in% c('id', 'location', 'date', 'cell', 'continent'))
+
+  return(A & B)
+}
+
+
+
+#' Constructs  an antigen gene entry
+#'
+#' Constructs an antigen gene entry. All params are optional
+#'
+#' @param gene char: gene name (HA or NA)
+#' @param sequence char
+#' @param clade char
+#' @param cluster char
+#'
+#' @return list
+#' @export
+#'
+#' @examples
 agdb.genes <- function(gene,
                        sequence,
                        clade,
                        cluster){
-
   genes <- list()
   if(!missing(gene))     { genes$gene     <- gene     }
   if(!missing(sequence)) { genes$sequence <- sequence }
@@ -307,12 +450,56 @@ agdb.genes <- function(gene,
 
 }
 
-
-
-
-
-# Alteration data
+#' Check an antigen genes entry
+#'
+#' Checks if a proposed genes entry follows the formatting rules.
+#'
+#' @details
+#' The following rules are currently checked:
+#' 1. genes is a list
+#' 2. only permitted fields are present for each gene in genes
+#' 2. all genes are HA or NA
+#'
+#' @param genes char: A proposed genes entry
+#' @param null_permitted bool: whether NULL should return T or F
+#'
+#' @return character
 #' @export
+#'
+#' @examples
+agdb.checkgenes <- function(genes){
+  if (is.null(genes)) return(T)
+
+  if (!(typeof(genes) == 'list')) return (F)
+
+
+  A = all(unlist(lapply(genes, function(gene){
+    all(names(gene) %in% c('gene', 'sequence', 'clade', 'cluster'))
+    })))
+
+  B = all(unlist(lapply(genes, function(gene){
+    gene$gene %in% c('HA', 'NA')
+    })))
+
+
+  return(A & B)
+}
+
+
+
+
+#' Constructs  an antigen alterations entry
+#'
+#' Constructs an antigen alterations entry. All params are optional
+#'
+#' @param gene char: gene name (HA or NA)
+#' @param parent_id char: the id of the origin virus for a transgene
+#' @param substitutions char: vector containing substitutions of form 'X123Y'
+#' #'
+#' @return list
+#' @export
+#'
+#' @examples
 agdb.alterations <- function(gene,
                              parent_id,
                              substitutions){
@@ -325,12 +512,80 @@ agdb.alterations <- function(gene,
 
 }
 
-
-
-
-
-# Passage data
+#' Check an antigen alterations entry
+#'
+#' Checks if a proposed alterations entry follows the formatting rules.
+#'
+#' @details
+#' The following rules are currently checked:
+#' 1. alterations is a list
+#' 2. only permitted fields are present for each alteration in alterations
+#' 3. all substitutions are valid
+#' 4. all parent_id's are valid
+#' 5. all .parent's are valid antigens
+#'
+#' @param alterations char: A proposed alterations entry
+#' @param null_permitted bool: whether NULL should return T or F
+#'
+#' @return character
 #' @export
+#'
+#' @examples
+agdb.checkalterations <- function(alterations){
+  if (is.null(alterations)) return(T)
+
+  A = (typeof(alterations) == 'list')
+
+  B = all(unlist(lapply(alterations, function(alteration){
+    A = (all(names(alteration) %in% c('gene', 'substitutions', 'parent_id')));
+    B = (alteration$gene %in% c('HA', 'NA'));
+    C = all(unlist(lapply(alteration$substitutions, is.substitution)))
+    D = is.null(alteration$parent_id) || agdb.checkid(alteration$parent_id)
+    E = is.null(alteration$.parent) || agdb.checkAG(alteration$.parent)
+  })))
+
+  return(all(A, B))
+}
+
+
+#' Check a substitutions entry
+#'
+#' Checks if a proposed substitution follows the correct formatting
+#'
+#' @details
+#' The following rules are currently checked:
+#' 1. substitution is of character type
+#' 2. starts and ends with valid single letter amino acid code
+#' 3. central characters form a numerb in 1:484
+#'
+#' @param subs char: A proposed substitution entry
+#'
+#' @return character
+#' @export
+#'
+#' @examples
+is.substitution <- function(subs){
+  if(is.null(subs)) return(T)
+  A = stringr::str_sub(subs,1,1) %in% aavalues()
+  B = stringr::str_sub(subs,-1,-1) %in% aavalues()
+  C = as.numeric(stringr::str_sub(subs,2,-2), ''[[1]]) %in% 1:484
+  all(A, B, C)
+}
+
+
+#' Constructs  an antigen passage entry
+#'
+#' Constructs an antigen passage entry. All params are optional
+#'
+#' @param history char: vecotr of known passage history
+#' @param egg char: not used
+#' @param cell char: cell or egg passaging
+#' @param details
+#' @param comments
+#' @return list
+#' @export
+#'
+#' @examples
 agdb.passage <- function(history,
                          egg,
                          cell,
@@ -347,6 +602,58 @@ agdb.passage <- function(history,
 
 }
 
+#' Check a passage entry
+#'
+#' Checks if a proposed passage entry follows the correct formatting
+#'
+#' @details
+#' The following rules are currently checked:
+#' 1. passage is of list type
+#' 2. only permitted names are present
+#'
+#' @param passage char: A proposed passage entry
+#'
+#' @return character
+#' @export
+#'
+#' @examples
+agdb.checkpassage <- function(passage){
+  if(is.null(passage)) return(T)
+
+  A = all(names(passage) %in% c('history', 'egg', 'cell', 'details', 'comments'))
+
+  return(all(A))
+}
+
+
+#####
+
+
+#' Append an antigen to an agdb
+#'
+#'
+#' @param agdb list
+#' @param ag environment
+#'
+#' @return list
+#' @export
+#'
+#' @examples
+agdb.append <- function(agdb, ag){
+
+  # Check for duplicate antigens
+  duplicates <- do.call(
+    agdb.find,
+    c(list(db = agdb), as.list(ag))
+  )
+
+  # Stop if duplicates are found
+  if(sum(duplicates) > 0) stop("A duplicate antigen was found")
+
+  # Otherwise append as normal
+  append(agdb, ag)
+
+}
 
 
 

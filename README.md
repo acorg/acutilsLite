@@ -7,8 +7,9 @@
 
 <!-- badges: end -->
 
-A simplified and soon-to-be tested and documented version of acutils.
-Provides functions for working with the json databases.
+A simplified and soon-to-be tested and documented version of acutils
+(<https://github.com/acorg/acutils>). Provides functions for working
+with the json databases.
 
 The package can be installed with:
 

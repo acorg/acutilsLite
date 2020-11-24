@@ -37,5 +37,4 @@ character
 }
 \description{
 Produces an entry for antigen databases (see ?agdb) from the passed data.
-The antigen is represented by an environment with additional classes "acdatabase.ag" and "acdatabase.entry"
 }

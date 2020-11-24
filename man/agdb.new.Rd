@@ -15,12 +15,3 @@ environment
 \description{
 Creates an antigen database from a list of antigen entries. For information on database structure, see ?agdb.
 }
-\examples{
-# load database
-package_path = system.file(package = "acutilsLite")
-db_path = paste0(package_path, "/tests/testthat/testdata/agdb_h3_small.json")
-print(db_path)
-library(jsonlite)
-db_list = read_json(db_path)
-db <- agdb.new(db_list)
-}

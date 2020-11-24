@@ -2,14 +2,14 @@
 % Please edit documentation in R/acdatabase_antigens.R
 \name{agdb.id}
 \alias{agdb.id}
-\title{Function to generate an id}
+\title{Generate an id}
 \usage{
 agdb.id(db, id = NULL, excluded_ids = NULL)
 }
 \arguments{
 \item{id}{should be left NULL}
 
-\item{excluded_ids}{character (optional) a vector of ids which should not be assigned}
+\item{excluded_ids}{char (optional): a vector of ids which should not be assigned}
 
 \item{agdb}{list}
 }

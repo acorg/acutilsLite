@@ -11,9 +11,9 @@ An antigen entry (ag) is an environment containing some of:
 
 \tabular{ll}{
 id   \tab  Antigen id: 6 random capital letters and numbers \cr
-strain \tab  one two three four five six seven eight nine ten eleven twelve thriteen one two three four five six seven eight nine ten eleven twelve thriteen \cr
+strain \tab  Rarely used. \cr
 long \tab Full strain name. \cr
-aliases \tab Other names known to be used to refere to this antigen. \cr
+aliases \tab Other names known to be used to refer to this antigen. \cr
 wildtype \tab Boolean: whether the strain is wildtype. \cr
 type \tab Influenza virus type (A, B...) \cr
 subtype \tab Influenza virus subtype (H3N2, H1N1...) \cr
@@ -24,7 +24,7 @@ parent_id \tab id of parent (by backbone) \cr
 .parent \tab the database entry for the parent antigen (by backbone) \cr
 alterations \tab alterations to parent (substitutions or gene transplants), organised by gene. Substitutions formatted as X123Y, transgenes identified by parent id. alterattion$.parent is the database entry for the gene origin when the alteration is a transplant.  \cr
 passage \tab passaging history \cr
-comments \tab Extra commetns - eg which study the antigen comes from \cr
+comments \tab Extra comments - eg which study the antigen comes from \cr
 groups \tab Useful annotations. For example: wildtype, mutatant, gen 1 root, gen 2 mutant, 3C.3A etc.  \cr
 meta \tab Some extra data about the antigen: cluster, mutant generation number, whether it is a reference strain \cr
 }
