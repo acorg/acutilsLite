@@ -7,7 +7,7 @@
 agdb.passage(history, egg, cell, details, comments)
 }
 \arguments{
-\item{history}{char: vecotr of known passage history}
+\item{history}{char: vector of known passage history}
 
 \item{egg}{char: not used}
 

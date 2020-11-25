@@ -65,42 +65,112 @@ NULL
 
 
 
-
-
-
-
-
-
-
 ##########################
 #
-#    CONSTRUCTORS AND CHECKERS
+#    WORKING WITH AGDBs
 #
 ##########################
 
-#' Check if a condition is fulfilled
+
+#' Read database
 #'
-#' Checks if checker_fn returns TRUE when passed arguments '...'. Otherwise throws error.
+#' @param file char
 #'
-#' @param checker_fn function: a boolean valued function checking if a condition is fulfilled by the arguments ...
-#' @param ... arguments to checker_fn
-#'
-#' @return bool
+#' @return list
 #' @export
-check_condition <- function(checker_fn, ...){
-  fn_char = as.character(enexpr(checker_fn))
-  if (!((checker_fn(...)))) stop('Error in ', fn_char)
-  return(T)
+#'
+#' @examples
+read.agdb <- function(file){
+
+  agdb.new(
+    jsonlite::read_json(
+      path = file,
+      simplifyVector    = TRUE,
+      simplifyDataFrame = FALSE,
+      simplifyMatrix    = FALSE
+    )
+  )
+
 }
+
+
+
+
+
+
+#' Match antigen attributes
+#'
+#' Find positions in agdb which have attributes specified in '...'. Attribute inheritance behavior can be set with `inherit` and `inherit.gene` (see `?ag.attribute`)
+#'
+#' @param agdb list: an agdb (see `?agdb`)
+#' @param ... attributes to match
+#' @param inherit: bool: whether to inherit attributes from parents
+#' @param inherit.gene char: which gene to inherit along
+#' @param simplify bool: whether to simplify list of length 1 to `list[[1]]`
+#'
+#' @return list
+#' @export
+#'
+#' @examples
+agdb.find = function(agdb, ..., inherit, inherit.gene, simplify) acdb.find(agdb, ..., inherit, inherit.gene, simplify) # just to rename params
+
+
+
+
+#' Match and extract antigen attributes
+#'
+#' Find antigen entries which have attributes specified in '...'. Attribute inheritance behavior can be set with `inherit` and `inherit.gene` (see `?ag.attribute`)
+#'
+#' @param agdb list: an agdb (see `?agdb`)
+#' @param ... attributes to match
+#' @param inherit: bool: whether to inherit attributes from parents
+#' @param inherit.gene char: which gene to inherit along
+#' @param simplify bool: whether to simplify list of length 1 to `list[[1]]`
+#'
+#' @return list
+#' @export
+#'
+#' @examples
+agdb.search = function(agdb, ..., inherit, inherit.gene, simplify) acdb.search(agdb, ..., inherit, inherit.gene, simplify) # just to rename params
+
+
+
+#' Match and extract a single antigen entry from attributes
+#'
+#' Find an antigen entry which has attributes specified in '...'. An error is thrown if there are multiple matches. Attribute inheritance behavior can be set with `inherit` and `inherit.gene` (see `?ag.attribute`).
+#'
+#'
+#' @param agdb list: an agdb (see `?agdb`)
+#' @param ... attributes to match
+#' @param inherit: bool: whether to inherit attributes from parents
+#' @param inherit.gene char: which gene to inherit along
+#' @param simplify bool: whether to simplify list of length 1 to `list[[1]]`
+#'
+#' @return list
+#' @export
+#'
+#' @examples
+agdb.extract = function(agdb, ..., inherit, inherit.gene, simplify) acdb.extract(agdb, ..., inherit, inherit.gene, simplify) # just to rename params
+
+
+
+
+
+
+
+##########################
+#
+#    CONSTRUCTORS
+#
+##########################
+
+
 
 
 #' Produce an antigen entry for the database
 #'
 #' Produces an entry for antigen databases (see ?agdb) from the passed data.
 #'
-#' @param agdb list
-#' @param id should be left NULL
-#' @param excluded_ids character (optional) a vector of ids which should not be assigned
 #'
 #' @return character
 #' @export
@@ -172,67 +242,7 @@ agdb.ag <- function(id,
 }
 
 
-#' Check antigen entry formatting
-#'
-#' Checks that a proposed antigen entry follows the formatting rules. See ?ag for more details on antigen objects.
-#'
-#' @details
-#' The following are currently checked:
-#' 1. class is c("acdatabase.ag", "acdatabase.entry", "environment")
-#' 2. only permitted fields are entered
-#' 3. all names (strain, long. type, subtype, lineage) are characters
-#' 4. construct checkers are fulfilled for : id, parent_id, alterations, genes, isolation, passage, .parent.
-#' @param ag environment: a proposed antigen entry
-#' @param null_permitted bool: whether NULL should return T or F
-#' @return bool
-#' @export
-#'
-#' @examples
-agdb.checkAG <- function(ag, null_permitted = F){
 
-  if (is.null(ag)) return(null_permitted)
-
-  # class:
-  if (!(setequal( class(ag), c("acdatabase.ag", "acdatabase.entry", "environment") ))) stop('class must be  c("acdatabase.ag", "acdatabase.entry", "environment")')
-
-  # fields
-  permitted_fields = c('id', 'strain', 'long', 'aliases', 'wildtype', 'type', 'subtype', 'lineage', 'isolation', 'genes', 'parent_id', 'alterations', 'passage', 'comments', 'groups', 'meta')
-  if (!(all(names(ag) %in% permitted_fields))) stop('Unpermitted fields in ', names(ag))
-
-
-  # strain, long, wildtype, type, subtype, lineage
-  if (!(all(unlist(lapply(ag[c('strain', 'long', 'type', 'subtype', 'lineage')],
-                   function(x){(typeof(x) == "character" | is.null(x))})))) ) {
-    stop('all names must be char type')
-  }
-
-  # aliases
-  if (!(all(unlist(lapply(ag$aliases, is.character))))) stop('all aliases must be char type')
-
-  # id
-  check_condition(agdb.checkid, ag$id)
-
-  # isolation
-  check_condition(agdb.checkisolation, ag$isolation)
-
-  # genes
-  check_condition(agdb.checkgenes, ag$genes)
-
-  # parent_id
-  check_condition(agdb.checkid, ag$parent_id, null_permitted = T)
-
-  # alterations
-  check_condition(agdb.checkalterations, ag$alterations)
-
-  # passage
-  check_condition(agdb.checkpassage, ag$passage)
-
-
-  # .parent
-  check_condition(agdb.checkAG, ag$.parent, null_permitted = T)
-
-  return(T)
-}
 
 
 
@@ -290,22 +300,7 @@ agdb.new <- function(db = list()){
 }
 
 
-#' Checks Antigen Database formatting
-#'
-#' Checks that an antigen database follows the formatting rules. For information on database structure, see ?agdb.
-#'
-#' @details
-#' The following rules are currently checked:
-#' 1. All entries are antigens (see ?agddb.checkAG)
-#' @param agdb list
-#'
-#' @return bool
-#' @export
-#'
-#' @examples
-agdb.checkagdb <- function(agdb){
-  return(lapply(agdb, agdb.checkAG))
-}
+
 
 
 
@@ -341,31 +336,6 @@ agdb.id <- function(db, id = NULL, excluded_ids = NULL){
 
 }
 
-#' Check an id
-#'
-#' Checks if a proposed id follows the formatting rules.
-#'
-#' @details
-#' The following rules are currently checked:
-#' 1. id is be character type
-#' 2. id has length 6
-#' 3. all characters are capital letters or numerals 0:9
-#'
-#' @param id char: A proposed id
-#' @param null_permitted bool: whether NULL should return T or F
-#'
-#' @return character
-#' @export
-#'
-#' @examples
-agdb.checkid <- function(id, null_permitted = F){
-  if (is.null(id)) return(null_permitted)
-  if (!is.character(id)) return(F)
-  split_id = strsplit(id, split = '')[[1]]
-  A = length(split_id) == 6
-  B = all(unlist(lapply( split_id, function(x){x %in% c(LETTERS, 0:9)})))
-  return(A & B)
-}
 
 
 #' Constructs  an antigen isolation entry
@@ -398,30 +368,6 @@ agdb.isolation <- function(id,
 
 }
 
-#' Check an antigen isolation entry
-#'
-#' Checks if a proposed isolation entry follows the formatting rules.
-#'
-#' @details
-#' The following rules are currently checked:
-#' 1. isolation is a list
-#' 2. only permitted fields are present
-#'
-#' @param isolation char: A proposed isolation entry
-#' @param null_permitted bool: whether NULL should return T or F
-#'
-#' @return character
-#' @export
-#'
-#' @examples
-agdb.checkisolation <- function(isolation){
-  if (is.null(isolation)) return (T)
-  A = typeof(isolation) == 'list'
-  B = all(names(isolation) %in% c('id', 'location', 'date', 'cell', 'continent'))
-
-  return(A & B)
-}
-
 
 
 #' Constructs  an antigen gene entry
@@ -450,40 +396,7 @@ agdb.genes <- function(gene,
 
 }
 
-#' Check an antigen genes entry
-#'
-#' Checks if a proposed genes entry follows the formatting rules.
-#'
-#' @details
-#' The following rules are currently checked:
-#' 1. genes is a list
-#' 2. only permitted fields are present for each gene in genes
-#' 2. all genes are HA or NA
-#'
-#' @param genes char: A proposed genes entry
-#' @param null_permitted bool: whether NULL should return T or F
-#'
-#' @return character
-#' @export
-#'
-#' @examples
-agdb.checkgenes <- function(genes){
-  if (is.null(genes)) return(T)
 
-  if (!(typeof(genes) == 'list')) return (F)
-
-
-  A = all(unlist(lapply(genes, function(gene){
-    all(names(gene) %in% c('gene', 'sequence', 'clade', 'cluster'))
-    })))
-
-  B = all(unlist(lapply(genes, function(gene){
-    gene$gene %in% c('HA', 'NA')
-    })))
-
-
-  return(A & B)
-}
 
 
 
@@ -512,72 +425,16 @@ agdb.alterations <- function(gene,
 
 }
 
-#' Check an antigen alterations entry
-#'
-#' Checks if a proposed alterations entry follows the formatting rules.
-#'
-#' @details
-#' The following rules are currently checked:
-#' 1. alterations is a list
-#' 2. only permitted fields are present for each alteration in alterations
-#' 3. all substitutions are valid
-#' 4. all parent_id's are valid
-#' 5. all .parent's are valid antigens
-#'
-#' @param alterations char: A proposed alterations entry
-#' @param null_permitted bool: whether NULL should return T or F
-#'
-#' @return character
-#' @export
-#'
-#' @examples
-agdb.checkalterations <- function(alterations){
-  if (is.null(alterations)) return(T)
-
-  A = (typeof(alterations) == 'list')
-
-  B = all(unlist(lapply(alterations, function(alteration){
-    A = (all(names(alteration) %in% c('gene', 'substitutions', 'parent_id')));
-    B = (alteration$gene %in% c('HA', 'NA'));
-    C = all(unlist(lapply(alteration$substitutions, is.substitution)))
-    D = is.null(alteration$parent_id) || agdb.checkid(alteration$parent_id)
-    E = is.null(alteration$.parent) || agdb.checkAG(alteration$.parent)
-  })))
-
-  return(all(A, B))
-}
 
 
-#' Check a substitutions entry
-#'
-#' Checks if a proposed substitution follows the correct formatting
-#'
-#' @details
-#' The following rules are currently checked:
-#' 1. substitution is of character type
-#' 2. starts and ends with valid single letter amino acid code
-#' 3. central characters form a numerb in 1:484
-#'
-#' @param subs char: A proposed substitution entry
-#'
-#' @return character
-#' @export
-#'
-#' @examples
-is.substitution <- function(subs){
-  if(is.null(subs)) return(T)
-  A = stringr::str_sub(subs,1,1) %in% aavalues()
-  B = stringr::str_sub(subs,-1,-1) %in% aavalues()
-  C = as.numeric(stringr::str_sub(subs,2,-2), ''[[1]]) %in% 1:484
-  all(A, B, C)
-}
+
 
 
 #' Constructs  an antigen passage entry
 #'
 #' Constructs an antigen passage entry. All params are optional
 #'
-#' @param history char: vecotr of known passage history
+#' @param history char: vector of known passage history
 #' @param egg char: not used
 #' @param cell char: cell or egg passaging
 #' @param details
@@ -602,31 +459,7 @@ agdb.passage <- function(history,
 
 }
 
-#' Check a passage entry
-#'
-#' Checks if a proposed passage entry follows the correct formatting
-#'
-#' @details
-#' The following rules are currently checked:
-#' 1. passage is of list type
-#' 2. only permitted names are present
-#'
-#' @param passage char: A proposed passage entry
-#'
-#' @return character
-#' @export
-#'
-#' @examples
-agdb.checkpassage <- function(passage){
-  if(is.null(passage)) return(T)
 
-  A = all(names(passage) %in% c('history', 'egg', 'cell', 'details', 'comments'))
-
-  return(all(A))
-}
-
-
-#####
 
 
 #' Append an antigen to an agdb
@@ -657,8 +490,17 @@ agdb.append <- function(agdb, ag){
 
 
 
-# Write a database
+#' Write database to file
+#'
+#' Writes an agdb to specified location. If a database with the same name already exists at that location, provides summary of additions, deletions and edits to database
+#'
+#' @param agdb list
+#' @param file char
+#'
+#' @return list
 #' @export
+#'
+#' @examples
 write.agdb <- function(db, file){
 
   # Check for unique ids
@@ -731,119 +573,82 @@ write.agdb <- function(db, file){
 
 }
 
+# Set the name order
+ag.nameorder <- c(
+  "id",
+  "parent_id",
+  "long",
+  "strain",
+  "wildtype",
+  "type",
+  "subtype",
+  "lineage",
+  "isolation",
+  "genes",
+  "alterations",
+  "passage",
+  "comments",
+  "groups",
+  "meta"
+)
 
+#' Mark which properties should be unboxed
+#'
+#' Helper for write.agdb
+#'
+#' @param db.database list
+#'
+#' @return list
+#'
+#' @examples
+outbox.agdb.database <- function(db.database){
 
+  for(n in seq_along(db.database)){
 
+    if(!is.null(db.database[[n]][["aliases"]])) {
+      db.database[[n]][["aliases"]] <- I(db.database[[n]][["aliases"]])
+    }
 
-# Read a database
-#' @export
-read.agdb <- function(file){
+    if(!is.null(db.database[[n]][["groups"]])) {
+      db.database[[n]][["groups"]] <- I(db.database[[n]][["groups"]])
+    }
 
-  agdb.new(
-    jsonlite::read_json(
-      path = file,
-      simplifyVector    = TRUE,
-      simplifyDataFrame = FALSE,
-      simplifyMatrix    = FALSE
-    )
-  )
+    if(!is.null(db.database[[n]][["passage"]][["history"]])){
+      db.database[[n]][["passage"]][["history"]] <- I(db.database[[n]][["passage"]][["history"]])
+    }
 
-}
+    if(!is.null(db.database[[n]][["alterations"]])) {
 
+      for(m in seq_along(db.database[[n]][["alterations"]])){
+        if(!is.null(db.database[[n]][["alterations"]][[m]][["substitutions"]])){
+          db.database[[n]][["alterations"]][[m]][["substitutions"]] <- I(db.database[[n]][["alterations"]][[m]][["substitutions"]])
+        }
+      }
 
+    }
 
+    if(!is.null(db.database[[n]][["meta"]][["egg-passage-mutations"]][["HA"]])) {
+      db.database[[n]][["meta"]][["egg-passage-mutations"]][["HA"]] <- I(db.database[[n]][["meta"]][["egg-passage-mutations"]][["HA"]])
+    }
+    if(!is.null(db.database[[n]][["meta"]][["egg-passage-mutations"]][["NA"]])) {
+      db.database[[n]][["meta"]][["egg-passage-mutations"]][["NA"]] <- I(db.database[[n]][["meta"]][["egg-passage-mutations"]][["NA"]])
+    }
 
+    # Order the names
+    db.database[[n]] <- db.database[[n]][
+      order(
+        match(
+          names(db.database[[n]]),
+          ag.nameorder
+        )
+      )
+    ]
 
-# Match an antigen
-#' @export
-agdb.find <- function(
-  db,
-  ...,
-  inherit = TRUE,
-  inherit.gene = "HA",
-  simplify = TRUE
-){
-
-  # Get values and criteria
-  values    <- list(...)
-  criterias <- names(values)
-
-  # Extract criteria
-  db_criteria <- lapply(criterias, function(criteria){
-    collate(sapply(db, function(ag){
-      ag.attribute(ag, criteria, inherit = inherit, inherit.gene = inherit.gene)
-    }))
-  })
-
-  # Compare values against criteria
-  result <- lapply(seq_along(values[[1]]), function(i){
-    matches <- do.call(cbind, lapply(seq_along(criterias), function(j){
-      db_criteria[[j]] == values[[j]][i]
-    }))
-    which(rowSums(!matches) == 0)
-  })
-
-  # Return result, simplified if length one
-  if(simplify && length(result) == 1){
-    result[[1]]
-  } else {
-    result
   }
 
-}
-
-
-
-# Match and extract antigens
-#' @export
-acdb.search <- function(
-  db,
-  ...,
-  inherit = TRUE,
-  inherit.gene = "HA",
-  simplify = TRUE
-){
-
-  if(missing(db)) db <- get_agdb()
-
-  matches <- agdb.find(
-    db, ...,
-    inherit = inherit,
-    inherit.gene = inherit.gene,
-    simplify = FALSE
-  )
-
-  if(simplify && length(matches) == 1){
-    db[matches[[1]]]
-  } else {
-    lapply(matches, function(x){
-      db[x]
-    })
-  }
+  db.database
 
 }
 
 
 
-#' @export
-acdb.extract <- function(
-  db,
-  ...,
-  inherit = TRUE,
-  inherit.gene = "HA"
-){
-
-  result <- acdb.search(
-    db = db,
-    ...,
-    inherit = inherit,
-    inherit.gene = inherit.gene
-  )
-
-  if(length(result) != 1){
-    stop(sprintf("Search returned %s matches", length(result)))
-  }
-
-  result[[1]]
-
-}
