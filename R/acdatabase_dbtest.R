@@ -226,8 +226,8 @@ agdb.checkalterations <- function(alterations){
 #' @examples
 is.substitution <- function(subs){
   if(is.null(subs)) return(T)
-  A = stringr::str_sub(subs,1,1) %in% aavalues()
-  B = stringr::str_sub(subs,-1,-1) %in% aavalues()
+  A = stringr::str_sub(subs,1,1) %in% aa.values()
+  B = stringr::str_sub(subs,-1,-1) %in% aa.values()
   C = as.numeric(stringr::str_sub(subs,2,-2), ''[[1]]) %in% 1:484
   all(A, B, C)
 }
@@ -270,7 +270,7 @@ agdb.checkpassage <- function(passage){
 #' @return bool
 #' @export
 check_condition <- function(checker_fn, ...){
-  fn_char = as.character(enexpr(checker_fn))
+  fn_char = as.character(rlang::enexpr(checker_fn))
   if (!((checker_fn(...)))) stop('Error in ', fn_char)
   return(T)
 }

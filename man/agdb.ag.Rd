@@ -25,13 +25,6 @@ agdb.ag(
   .parent = NULL
 )
 }
-\arguments{
-\item{id}{should be left NULL}
-
-\item{agdb}{list}
-
-\item{excluded_ids}{character (optional) a vector of ids which should not be assigned}
-}
 \value{
 character
 }

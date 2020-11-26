@@ -12,9 +12,9 @@ agdb = read.agdb(db_path)
 
 # gene_inheritance
 
-giHA = gene_inheritance(agdb[[1]], 'HA')
-giNA = gene_inheritance(agdb[[1]], 'NA')
-giBB = gene_inheritance(agdb[[1]], 'backbone')
+giHA = ag.inheritance(agdb[[1]], 'HA')
+giNA = ag.inheritance(agdb[[1]], 'NA')
+giBB = ag.inheritance(agdb[[1]], 'backbone')
 
 test_that("gene_inheritance", {
   expect_identical(giHA, giNA)

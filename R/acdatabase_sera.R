@@ -25,8 +25,6 @@
 #' @name srdb
 NULL
 
-srdb = read.srdb('../databases/h3n2/sera.json')
-srdb[[937]]$.parent
 
 
 #' Serum
@@ -89,61 +87,82 @@ read.srdb <- function(file){
 
 
 
-#' Match serum attributes
+
+#' Write database to file
 #'
-#' Find  positions in database which have attributes specified in '...'. Attribute inheritance behavior can be set with `inherit` (see `?sr.attribute`)
+#' Writes an agdb to specified location.
 #'
-#' @param srdb list: an agdb (see `?srdb`)
-#' @param ... attributes to match
-#' @param inherit: bool: whether to inherit attributes from parents
-#' @param simplify bool: whether to simplify list of length 1 to `list[[1]]`
+#' @param agdb list
+#' @param file char
 #'
 #' @return list
 #' @export
 #'
 #' @examples
-srdb.find <- function(srdb, ..., inherit = T, simplify = T){
-  return(acdb.find(srdb, ..., inherit, inherit.gene = 'BB', simplify)) # curry
+write.srdb <- function(db, file){
+
+  # Check for unique ids
+  if(sum(duplicated(db%$%id)) > 0) {
+    stop("Database contains duplicate ids")
+  }
+
+  # Write out the database
+  jsonlite::write_json(
+    x          = outbox.srdb(acdb.as.list(db)),
+    path       = file,
+    pretty     = 4,
+    auto_unbox = TRUE
+  )
+
 }
 
+sr.nameorder <- c(
+  "id",
+  "long",
+  "strain_id",
+  "parent_id",
+  "species",
+  "animal_id",
+  "sample_date",
+  "meta",
+  "comments",
+  "aliases"
+)
 
-#' Match and extract serum attributes
+#' Mark which properties should be unboxed
 #'
-#' Find serum entries which have attributes specified in '...'. Attribute inheritance behavior can be set with `inherit` and `inherit.gene` (see `?sr.attribute`)
+#' Helper for write.srdb
 #'
-#' @param srdb list: an agdb (see `?srdb`)
-#' @param ... attributes to match
-#' @param inherit: bool: whether to inherit attributes from parents
-#' @param inherit.gene char: which gene to inherit along
-#' @param simplify bool: whether to simplify list of length 1 to `list[[1]]`
+#' @param db.database list
 #'
 #' @return list
-#' @export
 #'
 #' @examples
-srdb.search = function(srdb, ..., inherit = T, simplify = T){
-  return(acdb.search(srdb, ..., inherit, inherit.gene = 'BB', simplify)) # curry)
+outbox.srdb <- function(db){
+
+  for(n in seq_along(db)){
+
+    if(!is.null(db[[n]]$aliases)) {
+      db[[n]]$aliases <- I(db[[n]]$aliases)
+    }
+
+    # Order the names
+    db[[n]] <- db[[n]][
+      order(
+        match(
+          names(db[[n]]),
+          sr.nameorder
+        )
+      )
+    ]
+
+  }
+
+  db
+
 }
 
 
-#' Match and extract a single serum entry from attributes
-#'
-#' Find a serum entry which has attributes specified in '...'. An error is thrown if there are multiple matches. Attribute inheritance behavior can be set with `inherit` (see `?sr.attribute`).
-#'
-#'
-#' @param srdb list: an agdb (see `?srdb`)
-#' @param ... attributes to match
-#' @param inherit: bool: whether to inherit attributes from parents
-#' @param inherit.gene char: which gene to inherit along
-#' @param simplify bool: whether to simplify list of length 1 to `list[[1]]`
-#'
-#' @return list
-#' @export
-#'
-#' @examples
-srdb.extract = function(srdb, ..., inherit = T, simplify = T){
-  return(acdb.extract(srdb, ..., inherit, inherit.gene = 'BB', simplify)) # curry)
-}
 
 
 ##########################
@@ -262,78 +281,4 @@ srdb.new <- function(db = list()){
 }
 
 
-#' Write database to file
-#'
-#' Writes an agdb to specified location.
-#'
-#' @param agdb list
-#' @param file char
-#'
-#' @return list
-#' @export
-#'
-#' @examples
-write.srdb <- function(db, file){
-
-  # Check for unique ids
-  if(sum(duplicated(db%$%id)) > 0) {
-    stop("Database contains duplicate ids")
-  }
-
-  # Write out the database
-  jsonlite::write_json(
-    x          = outbox.srdb(acdb.as.list(db)),
-    path       = file,
-    pretty     = 4,
-    auto_unbox = TRUE
-  )
-
-}
-
-sr.nameorder <- c(
-  "id",
-  "long",
-  "strain_id",
-  "parent_id",
-  "species",
-  "animal_id",
-  "sample_date",
-  "meta",
-  "comments",
-  "aliases"
-)
-
-#' Mark which properties should be unboxed
-#'
-#' Helper for write.srdb
-#'
-#' @param db.database list
-#'
-#' @return list
-#' @export
-#'
-#' @examples
-outbox.srdb <- function(db){
-
-  for(n in seq_along(db)){
-
-    if(!is.null(db[[n]]$aliases)) {
-      db[[n]]$aliases <- I(db[[n]]$aliases)
-    }
-
-    # Order the names
-    db[[n]] <- db[[n]][
-      order(
-        match(
-          names(db[[n]]),
-          sr.nameorder
-        )
-      )
-    ]
-
-  }
-
-  db
-
-}
 

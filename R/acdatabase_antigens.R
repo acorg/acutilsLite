@@ -67,7 +67,7 @@ NULL
 
 ##########################
 #
-#    WORKING WITH AGDBs
+#    READ AND WRITE
 #
 ##########################
 
@@ -96,64 +96,165 @@ read.agdb <- function(file){
 
 
 
-
-
-#' Match antigen attributes
+#' Write database to file
 #'
-#' Find positions in agdb which have attributes specified in '...'. Attribute inheritance behavior can be set with `inherit` and `inherit.gene` (see `?ag.attribute`)
+#' Writes an agdb to specified location. If a database with the same name already exists at that location, provides summary of additions, deletions and edits to database
 #'
-#' @param agdb list: an agdb (see `?agdb`)
-#' @param ... attributes to match
-#' @param inherit: bool: whether to inherit attributes from parents
-#' @param inherit.gene char: which gene to inherit along
-#' @param simplify bool: whether to simplify list of length 1 to `list[[1]]`
+#' @param agdb list
+#' @param file char
 #'
 #' @return list
 #' @export
 #'
 #' @examples
-agdb.find = function(agdb, ..., inherit, inherit.gene, simplify) acdb.find(agdb, ..., inherit, inherit.gene, simplify) # just to rename params
+write.agdb <- function(db, file){
 
+  # Check for unique ids
+  if(sum(duplicated(collate(db%$%id))) > 0) {
+    stop("Database contains duplicate ids")
+  }
 
+  # Set variables
+  nadditions <- length(db)
+  ndeletions <- 0
+  nedits     <- 0
 
+  # Convert to list
+  db <- acdb.as.list(db)
 
-#' Match and extract antigen attributes
+  # Read any original file
+  if(file.exists(file)){
+
+    dbo <- read.agdb(file)
+    dbo <- acdb.as.list(dbo)
+    message("")
+    message("Existing database updated")
+
+    newids  <- vapply(db, function(x){ x$id }, character(1))
+    origids <- vapply(dbo, function(x){ x$id }, character(1))
+
+    additions <- newids[!newids %in% origids]
+    deletions <- origids[!origids %in% newids]
+
+    edits <- vapply(newids[newids %in% origids], function(id){
+
+      # Get antigens to compare
+      ag1 <- db[[which(newids == id)]]
+      ag2 <- dbo[[which(origids == id)]]
+
+      # Compare alphabetically ordered values
+      !identical(
+        ag1[order(names(ag1))],
+        ag2[order(names(ag2))]
+      )
+    }, logical(1))
+
+    nadditions <- length(additions)
+    ndeletions <- length(deletions)
+    nedits     <- sum(edits)
+
+    message(sprintf("%s additions", nadditions))
+    message(sprintf("%s deletions", ndeletions))
+    message(sprintf("%s edits",     nedits))
+    message("")
+
+  }
+
+  # Write out the database
+  jsonlite::write_json(
+    x          = outbox.agdb.database(db),
+    path       = file,
+    pretty     = 4,
+    auto_unbox = TRUE
+  )
+
+  # Return data invisibly
+  invisible(
+    list(
+      additions = nadditions,
+      deletions = ndeletions,
+      edits     = nedits
+    )
+  )
+
+}
+
+# Set the name order
+ag.nameorder <- c(
+  "id",
+  "parent_id",
+  "long",
+  "strain",
+  "wildtype",
+  "type",
+  "subtype",
+  "lineage",
+  "isolation",
+  "genes",
+  "alterations",
+  "passage",
+  "comments",
+  "groups",
+  "meta"
+)
+
+#' Mark which properties should be unboxed
 #'
-#' Find antigen entries which have attributes specified in '...'. Attribute inheritance behavior can be set with `inherit` and `inherit.gene` (see `?ag.attribute`)
+#' Helper for write.agdb
 #'
-#' @param agdb list: an agdb (see `?agdb`)
-#' @param ... attributes to match
-#' @param inherit: bool: whether to inherit attributes from parents
-#' @param inherit.gene char: which gene to inherit along
-#' @param simplify bool: whether to simplify list of length 1 to `list[[1]]`
+#' @param db.database list
 #'
 #' @return list
-#' @export
 #'
 #' @examples
-agdb.search = function(agdb, ..., inherit, inherit.gene, simplify) acdb.search(agdb, ..., inherit, inherit.gene, simplify) # just to rename params
+outbox.agdb.database <- function(db.database){
 
+  for(n in seq_along(db.database)){
 
+    if(!is.null(db.database[[n]][["aliases"]])) {
+      db.database[[n]][["aliases"]] <- I(db.database[[n]][["aliases"]])
+    }
 
-#' Match and extract a single antigen entry from attributes
-#'
-#' Find an antigen entry which has attributes specified in '...'. An error is thrown if there are multiple matches. Attribute inheritance behavior can be set with `inherit` and `inherit.gene` (see `?ag.attribute`).
-#'
-#'
-#' @param agdb list: an agdb (see `?agdb`)
-#' @param ... attributes to match
-#' @param inherit: bool: whether to inherit attributes from parents
-#' @param inherit.gene char: which gene to inherit along
-#' @param simplify bool: whether to simplify list of length 1 to `list[[1]]`
-#'
-#' @return list
-#' @export
-#'
-#' @examples
-agdb.extract = function(agdb, ..., inherit, inherit.gene, simplify) acdb.extract(agdb, ..., inherit, inherit.gene, simplify) # just to rename params
+    if(!is.null(db.database[[n]][["groups"]])) {
+      db.database[[n]][["groups"]] <- I(db.database[[n]][["groups"]])
+    }
 
+    if(!is.null(db.database[[n]][["passage"]][["history"]])){
+      db.database[[n]][["passage"]][["history"]] <- I(db.database[[n]][["passage"]][["history"]])
+    }
 
+    if(!is.null(db.database[[n]][["alterations"]])) {
 
+      for(m in seq_along(db.database[[n]][["alterations"]])){
+        if(!is.null(db.database[[n]][["alterations"]][[m]][["substitutions"]])){
+          db.database[[n]][["alterations"]][[m]][["substitutions"]] <- I(db.database[[n]][["alterations"]][[m]][["substitutions"]])
+        }
+      }
+
+    }
+
+    if(!is.null(db.database[[n]][["meta"]][["egg-passage-mutations"]][["HA"]])) {
+      db.database[[n]][["meta"]][["egg-passage-mutations"]][["HA"]] <- I(db.database[[n]][["meta"]][["egg-passage-mutations"]][["HA"]])
+    }
+    if(!is.null(db.database[[n]][["meta"]][["egg-passage-mutations"]][["NA"]])) {
+      db.database[[n]][["meta"]][["egg-passage-mutations"]][["NA"]] <- I(db.database[[n]][["meta"]][["egg-passage-mutations"]][["NA"]])
+    }
+
+    # Order the names
+    db.database[[n]] <- db.database[[n]][
+      order(
+        match(
+          names(db.database[[n]]),
+          ag.nameorder
+        )
+      )
+    ]
+
+  }
+
+  db.database
+
+}
 
 
 
@@ -462,6 +563,31 @@ agdb.passage <- function(history,
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+##########################
+#
+#    MODIFY
+#
+##########################
+
+#
+# modify single ag entry
+#
+
+#
+# modify agdb
+#
+
 #' Append an antigen to an agdb
 #'
 #'
@@ -476,7 +602,7 @@ agdb.append <- function(agdb, ag){
 
   # Check for duplicate antigens
   duplicates <- do.call(
-    agdb.find,
+    acdb.find,
     c(list(db = agdb), as.list(ag))
   )
 
@@ -485,170 +611,4 @@ agdb.append <- function(agdb, ag){
 
   # Otherwise append as normal
   append(agdb, ag)
-
 }
-
-
-
-#' Write database to file
-#'
-#' Writes an agdb to specified location. If a database with the same name already exists at that location, provides summary of additions, deletions and edits to database
-#'
-#' @param agdb list
-#' @param file char
-#'
-#' @return list
-#' @export
-#'
-#' @examples
-write.agdb <- function(db, file){
-
-  # Check for unique ids
-  if(sum(duplicated(collate(db%$%id))) > 0) {
-    stop("Database contains duplicate ids")
-  }
-
-  # Set variables
-  nadditions <- length(db)
-  ndeletions <- 0
-  nedits     <- 0
-
-  # Convert to list
-  db <- acdb.as.list(db)
-
-  # Read any original file
-  if(file.exists(file)){
-
-    dbo <- read.agdb(file)
-    dbo <- acdb.as.list(dbo)
-    message("")
-    message("Existing database updated")
-
-    newids  <- vapply(db, function(x){ x$id }, character(1))
-    origids <- vapply(dbo, function(x){ x$id }, character(1))
-
-    additions <- newids[!newids %in% origids]
-    deletions <- origids[!origids %in% newids]
-
-    edits <- vapply(newids[newids %in% origids], function(id){
-
-      # Get antigens to compare
-      ag1 <- db[[which(newids == id)]]
-      ag2 <- dbo[[which(origids == id)]]
-
-      # Compare alphabetically ordered values
-      !identical(
-        ag1[order(names(ag1))],
-        ag2[order(names(ag2))]
-      )
-    }, logical(1))
-
-    nadditions <- length(additions)
-    ndeletions <- length(deletions)
-    nedits     <- sum(edits)
-
-    message(sprintf("%s additions", nadditions))
-    message(sprintf("%s deletions", ndeletions))
-    message(sprintf("%s edits",     nedits))
-    message("")
-
-  }
-
-  # Write out the database
-  jsonlite::write_json(
-    x          = outbox.agdb.database(db),
-    path       = file,
-    pretty     = 4,
-    auto_unbox = TRUE
-  )
-
-  # Return data invisibly
-  invisible(
-    list(
-      additions = nadditions,
-      deletions = ndeletions,
-      edits     = nedits
-    )
-  )
-
-}
-
-# Set the name order
-ag.nameorder <- c(
-  "id",
-  "parent_id",
-  "long",
-  "strain",
-  "wildtype",
-  "type",
-  "subtype",
-  "lineage",
-  "isolation",
-  "genes",
-  "alterations",
-  "passage",
-  "comments",
-  "groups",
-  "meta"
-)
-
-#' Mark which properties should be unboxed
-#'
-#' Helper for write.agdb
-#'
-#' @param db.database list
-#'
-#' @return list
-#'
-#' @examples
-outbox.agdb.database <- function(db.database){
-
-  for(n in seq_along(db.database)){
-
-    if(!is.null(db.database[[n]][["aliases"]])) {
-      db.database[[n]][["aliases"]] <- I(db.database[[n]][["aliases"]])
-    }
-
-    if(!is.null(db.database[[n]][["groups"]])) {
-      db.database[[n]][["groups"]] <- I(db.database[[n]][["groups"]])
-    }
-
-    if(!is.null(db.database[[n]][["passage"]][["history"]])){
-      db.database[[n]][["passage"]][["history"]] <- I(db.database[[n]][["passage"]][["history"]])
-    }
-
-    if(!is.null(db.database[[n]][["alterations"]])) {
-
-      for(m in seq_along(db.database[[n]][["alterations"]])){
-        if(!is.null(db.database[[n]][["alterations"]][[m]][["substitutions"]])){
-          db.database[[n]][["alterations"]][[m]][["substitutions"]] <- I(db.database[[n]][["alterations"]][[m]][["substitutions"]])
-        }
-      }
-
-    }
-
-    if(!is.null(db.database[[n]][["meta"]][["egg-passage-mutations"]][["HA"]])) {
-      db.database[[n]][["meta"]][["egg-passage-mutations"]][["HA"]] <- I(db.database[[n]][["meta"]][["egg-passage-mutations"]][["HA"]])
-    }
-    if(!is.null(db.database[[n]][["meta"]][["egg-passage-mutations"]][["NA"]])) {
-      db.database[[n]][["meta"]][["egg-passage-mutations"]][["NA"]] <- I(db.database[[n]][["meta"]][["egg-passage-mutations"]][["NA"]])
-    }
-
-    # Order the names
-    db.database[[n]] <- db.database[[n]][
-      order(
-        match(
-          names(db.database[[n]]),
-          ag.nameorder
-        )
-      )
-    ]
-
-  }
-
-  db.database
-
-}
-
-
-

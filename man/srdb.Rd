@@ -7,18 +7,19 @@
 Serum database
 }
 \details{
-The serum database is ultimately stored as a json file with fields:
-
-id
-long
-strain_id
-parent_id
-species
-animal_id
-sample_date
-meta
-comments
-aliases
+The serum database is ultimately stored as a json file with fields (see \code{?sr} for more details):
+\enumerate{
+\item id
+\item long
+\item strain_id
+\item parent_id
+\item species
+\item animal_id
+\item sample_date
+\item meta
+\item comments
+\item aliases
+}
 
 Not all fields are filled for all sera
 

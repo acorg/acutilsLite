@@ -25,5 +25,5 @@ aliases \tab generally empty, sometimes contains strain name \cr
 
 The parent environment is always the empty environment; \verb{$.parent} is a previous serum taken from the same individual for pre/post vaccination studies.
 
-It has classes c("acdatabase.ag", "acdatabase.entry", "environment")
+It has classes c("acdatabase.sr", "acdatabase.entry", "environment")
 }

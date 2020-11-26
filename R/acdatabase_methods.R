@@ -27,7 +27,7 @@ print.acdatabase.entry <- function(db.ag){
     listvals <- listvals[!names(listvals) %in% envnames]
     envnames <- c(envnames, names(listvals))
 
-    output <- capture.output(print(listvals))
+    output <- utils::capture.output(print(listvals))
     output[output != ""] <- paste0(rep("..", envnum - 1), output[output != ""])
     output <- paste(output, collapse = "\n")
 
@@ -81,6 +81,33 @@ print.acdatabase.entry <- function(db.ag){
 #' @examples
 `%$%` <- function(db, val){
   val <- as.character(match.call()[3])
+  val <- strsplit(val, "$", fixed = TRUE)[[1]]
+  lapply(db, function(ag){
+    if(is.environment(ag)){
+      result <- get0(val, envir = ag)
+    } else {
+      result <- ag[[val]]
+    }
+    for(v in val[-1]){
+      result <- result[[v]]
+    }
+    # result <- ag
+    # for(v in val){
+    #   result <- result[[v]]
+    # }
+    result
+  })
+}
+
+
+#' Subsetting for databases
+#'
+#' Returns field for all database entries. Like `%$%`, except variable val is supported.
+#'
+#' @export
+#'
+#' @examples
+acdb.slice <- function(db, val){
   val <- strsplit(val, "$", fixed = TRUE)[[1]]
   lapply(db, function(ag){
     if(is.environment(ag)){
