@@ -784,6 +784,20 @@ agdb.substitutions <- function(agdb, inherit = T){
   acdb.applyFunction(agdb, function(ag){ unlist(ag.substitutions(ag, gene = "HA", inherit)) })
 }
 
+
+
+#' Are there subsitutions in the inheritance of HA?
+#'
+#' @param agdb
+#'
+#' @return
+#' @export
+agdb.hasSubstitutions <- function(agdb, inherit = T){
+  acdb.applyFunction(agdb, function(ag){ length(unlist(ag.substitutions(ag, gene = "HA", inherit))) > 0 })
+}
+
+
+
 #' Get sequences from agdb
 #'
 #' @param agdb
