@@ -64,6 +64,16 @@ NULL
 NULL
 
 
+# load test database
+agdb.loadTest <- function(){
+  files = list.files(recursive = T)
+  split_files = lapply(files, function(f){strsplit(f, split = '/')} )
+  mask = unlist(lapply(split_files, function(file)file[[1]][[length(file[[1]])]] == 'agdb_h3_small.json'))
+  db_path = files[which.max(mask)]
+  agdb.test <<- read.agdb(db_path)
+
+  invisible(read.agdb(db_path))
+}
 
 ##########################
 #

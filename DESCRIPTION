@@ -17,6 +17,9 @@ Imports:
     stringr,
     rlang,
     tibble,
-    crayon
+    crayon,
+    Racmacs,
+    dplyr,
+    tidyr
 Suggests: 
     testthat
