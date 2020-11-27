@@ -100,10 +100,12 @@ expdb.merge <- function(
 #' @param merge_passage bool: not implemented
 #'
 #' @return char: merged titer table
+#'
+#' @rdname
 #' @export
 #'
 #' @examples
-exp.merge <- function(
+exper.merge <- function(
   exp,
   expect_repeats = FALSE,
   merge_passage = FALSE
@@ -156,6 +158,31 @@ exp.merge <- function(
 
   # Return the result
   table_merge
+
+}
+
+
+#' @export
+titertable.toLong <- function(
+  titertable,
+  agdb,
+  srdb
+){
+
+  tibble::as_tibble(
+    titertable,
+    rownames = "ag"
+  ) %>%
+    tidyr::pivot_longer(
+      cols      = -ag,
+      names_to  = "sr",
+      values_to = "titer"
+    ) %>%
+    dplyr::mutate(
+      ag_records = acdb.getIDs(ag, agdb),
+      sr_records = acdb.getIDs(sr, srdb),
+      srag_records = srdb.homologousAntigens(sr_records, agdb)
+    )
 
 }
 

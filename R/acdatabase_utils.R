@@ -981,9 +981,9 @@ ag.experiments <- function(
 #' @export
 #'
 #' @examples
-acdb.getIDs <- function(db, ids){
+acdb.getIDs <- function(ids, db){
 
-  dbids <- unlist(db%$%ids)
+  dbids <- unlist(db%$%id)
   if(sum(!ids %in% dbids) > 0) stop("IDs not found in database")
   db[match(ids, dbids)]
 

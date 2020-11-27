@@ -7,10 +7,12 @@
 #' @param exp
 #'
 #' @return tibble
+#'
+#' @rdname
 #' @export
 #'
 #' @examples
-exp.longTibble <- function(exp){
+exper.longTibble <- function(exp){
 
   # Fetch list of long-format results tibbles
   results_list <- lapply(seq_along(exp$results), function(x){
@@ -53,7 +55,7 @@ exp.longTibble <- function(exp){
 expdb.longTibble <- function(expdb){
 
   # Fetch list of long-format experiment tibbles
-  exps_list <- lapply(expdb, exp.longTibble)
+  exps_list <- lapply(expdb, exper.longTibble)
 
   # Merge into one long tibble
   exps_tibble <- do.call(dplyr::bind_rows, exps_list)
@@ -68,6 +70,11 @@ expdb.longTibble <- function(expdb){
     )
 
 }
+
+
+
+
+
 
 #' Add tibble plotting columns
 #'
