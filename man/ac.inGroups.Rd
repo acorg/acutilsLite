@@ -4,7 +4,7 @@
 \alias{ac.inGroups}
 \title{Check if ag/sr is in groups}
 \usage{
-ac.inGroups(ac, ...)
+ac.inGroups(ac, ..., all = T)
 }
 \arguments{
 \item{...}{groups to check}

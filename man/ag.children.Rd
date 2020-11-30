@@ -4,7 +4,7 @@
 \alias{ag.children}
 \title{Get children}
 \usage{
-ag.children(ag, agdb)
+ag.children(ag, agdb, gene = "BB", parents = NULL)
 }
 \arguments{
 \item{ag}{environment: an antigen}

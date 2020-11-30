@@ -4,7 +4,7 @@
 \alias{acdb.getIDs}
 \title{Subset database based on IDs}
 \usage{
-acdb.getIDs(db, ids)
+acdb.getIDs(ids, db)
 }
 \arguments{
 \item{ids}{}

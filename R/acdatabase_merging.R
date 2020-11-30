@@ -162,28 +162,3 @@ exper.merge <- function(
 }
 
 
-#' @export
-titertable.toLong <- function(
-  titertable,
-  agdb,
-  srdb
-){
-
-  tibble::as_tibble(
-    titertable,
-    rownames = "ag"
-  ) %>%
-    tidyr::pivot_longer(
-      cols      = -ag,
-      names_to  = "sr",
-      values_to = "titer"
-    ) %>%
-    dplyr::mutate(
-      ag_records = acdb.getIDs(ag, agdb),
-      sr_records = acdb.getIDs(sr, srdb),
-      srag_records = srdb.homologousAntigens(sr_records, agdb)
-    )
-
-}
-
-

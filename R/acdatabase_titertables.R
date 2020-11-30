@@ -1,3 +1,59 @@
+##########################
+#
+#    Square
+#
+##########################
+
+
+
+#' @export
+titertable.toLong <- function(
+  titertable,
+  agdb,
+  srdb
+){
+
+  tibble::as_tibble(
+    titertable,
+    rownames = "ag"
+  ) %>%
+    tidyr::pivot_longer(
+      cols      = -ag,
+      names_to  = "sr",
+      values_to = "titer"
+    ) %>%
+    dplyr::mutate(
+      ag_records = acdb.getIDs(ag, agdb),
+      sr_records = acdb.getIDs(sr, srdb),
+      srag_records = srdb.homologousAntigens(sr_records, agdb)
+    )
+
+}
+
+#' @export
+titertable.addNames <- function(
+  titertable,
+  agdb = get_agdb(),
+  srdb = get_srdb(),
+  append_names = FALSE
+){
+  aglong <- acdb.nameIDs(rownames(titertable), agdb)
+  srlong <- acdb.nameIDs(colnames(titertable), srdb)
+  if(append_names){
+    aglong <- paste(rownames(titertable), aglong, sep = ": ")
+    srlong <- paste(colnames(titertable), srlong, sep = ": ")
+  }
+  rownames(titertable) <- aglong
+  colnames(titertable) <- srlong
+  titertable
+}
+
+##########################
+#
+#    Long
+#
+##########################
+
 
 
 #' Parse an experiment to tibble
@@ -63,9 +119,9 @@ expdb.longTibble <- function(expdb){
   # Return tibble alongside ag, sr and experiment references
   exps_tibble %>%
     dplyr::mutate(
-      exp_records = acdb.getIDs(expdb, exp),
-      ag_records = acdb.getIDs(agdb, ag),
-      sr_records = acdb.getIDs(srdb, sr),
+      exp_records = acdb.getIDs(exp, expdb),
+      ag_records = acdb.getIDs(ag, agdb),
+      sr_records = acdb.getIDs(sr, srdb),
       srag_records = srdb.homologousAntigens(sr_records, agdb),
     )
 
@@ -127,6 +183,19 @@ titerlong.plotdata <- function(
 
 }
 
+#'@export
+titerlong.splitSubstitutions <- function(titerlong){
+  if (! ('substitutions') %in% names(titerlong)) stop("Need a column called 'substitutions'")
+
+  splitsubs = purrr::transpose(subs.split.list(titerlong$substitutions))
+
+  titerlong$from = splitsubs$from
+  titerlong$at = splitsubs$at
+  titerlong$to = splitsubs$to
+
+
+  return(titerlong)
+}
 
 #' Summarise by serum cluster
 #'
