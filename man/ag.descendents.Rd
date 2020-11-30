@@ -4,7 +4,7 @@
 \alias{ag.descendents}
 \title{Get all descendants}
 \usage{
-ag.descendents(ag, agdb)
+ag.descendents(ag, agdb, gene = "BB")
 }
 \arguments{
 \item{ag}{environment: an antigen}

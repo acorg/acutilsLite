@@ -9,7 +9,7 @@
 #' @export
 #'
 #' @examples
-print.acdatabase.entry <- function(db.ag){
+print.acdatabase.entry <- function(db.ag, ...){
 
   # Print short descriptor
   cat(crayon::green(sprintf("<acdatabase.ag: %s>\n", db.ag$id)))
@@ -170,7 +170,7 @@ acdb.as.list <- function(db){
 #' @export
 #'
 #' @examples
-as.list.acdatabase.ag <- function(record){
+as.list.acdatabase.ag <- function(record, ...){
   recordlist <- as.list.environment(record)
 
   # remove .parent entries under alterations (as.list.environment automatically removes top level .parent)

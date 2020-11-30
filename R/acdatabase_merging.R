@@ -100,10 +100,12 @@ expdb.merge <- function(
 #' @param merge_passage bool: not implemented
 #'
 #' @return char: merged titer table
+#'
+#' @rdname
 #' @export
 #'
 #' @examples
-exp.merge <- function(
+exper.merge <- function(
   exp,
   expect_repeats = FALSE,
   merge_passage = FALSE

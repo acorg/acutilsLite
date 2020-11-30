@@ -1,3 +1,59 @@
+##########################
+#
+#    Square
+#
+##########################
+
+
+
+#' @export
+titertable.toLong <- function(
+  titertable,
+  agdb,
+  srdb
+){
+
+  tibble::as_tibble(
+    titertable,
+    rownames = "ag"
+  ) %>%
+    tidyr::pivot_longer(
+      cols      = -ag,
+      names_to  = "sr",
+      values_to = "titer"
+    ) %>%
+    dplyr::mutate(
+      ag_records = acdb.getIDs(ag, agdb),
+      sr_records = acdb.getIDs(sr, srdb),
+      srag_records = srdb.homologousAntigens(sr_records, agdb)
+    )
+
+}
+
+#' @export
+titertable.addNames <- function(
+  titertable,
+  agdb = get_agdb(),
+  srdb = get_srdb(),
+  append_names = FALSE
+){
+  aglong <- acdb.nameIDs(rownames(titertable), agdb)
+  srlong <- acdb.nameIDs(colnames(titertable), srdb)
+  if(append_names){
+    aglong <- paste(rownames(titertable), aglong, sep = ": ")
+    srlong <- paste(colnames(titertable), srlong, sep = ": ")
+  }
+  rownames(titertable) <- aglong
+  colnames(titertable) <- srlong
+  titertable
+}
+
+##########################
+#
+#    Long
+#
+##########################
+
 
 
 #' Parse an experiment to tibble
@@ -7,10 +63,12 @@
 #' @param exp
 #'
 #' @return tibble
+#'
+#' @rdname
 #' @export
 #'
 #' @examples
-exp.longTibble <- function(exp){
+exper.longTibble <- function(exp){
 
   # Fetch list of long-format results tibbles
   results_list <- lapply(seq_along(exp$results), function(x){
@@ -53,7 +111,7 @@ exp.longTibble <- function(exp){
 expdb.longTibble <- function(expdb){
 
   # Fetch list of long-format experiment tibbles
-  exps_list <- lapply(expdb, exp.longTibble)
+  exps_list <- lapply(expdb, exper.longTibble)
 
   # Merge into one long tibble
   exps_tibble <- do.call(dplyr::bind_rows, exps_list)
@@ -61,13 +119,18 @@ expdb.longTibble <- function(expdb){
   # Return tibble alongside ag, sr and experiment references
   exps_tibble %>%
     dplyr::mutate(
-      exp_records = acdb.getIDs(expdb, exp),
-      ag_records = acdb.getIDs(agdb, ag),
-      sr_records = acdb.getIDs(srdb, sr),
+      exp_records = acdb.getIDs(exp, expdb),
+      ag_records = acdb.getIDs(ag, agdb),
+      sr_records = acdb.getIDs(sr, srdb),
       srag_records = srdb.homologousAntigens(sr_records, agdb),
     )
 
 }
+
+
+
+
+
 
 #' Add tibble plotting columns
 #'
@@ -120,6 +183,19 @@ titerlong.plotdata <- function(
 
 }
 
+#'@export
+titerlong.splitSubstitutions <- function(titerlong){
+  if (! ('substitutions') %in% names(titerlong)) stop("Need a column called 'substitutions'")
+
+  splitsubs = purrr::transpose(subs.split.list(titerlong$substitutions))
+
+  titerlong$from = splitsubs$from
+  titerlong$at = splitsubs$at
+  titerlong$to = splitsubs$to
+
+
+  return(titerlong)
+}
 
 #' Summarise by serum cluster
 #'

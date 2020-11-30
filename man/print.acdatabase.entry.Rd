@@ -4,7 +4,7 @@
 \alias{print.acdatabase.entry}
 \title{Printing an acdb entry}
 \usage{
-\method{print}{acdatabase.entry}(db.ag)
+\method{print}{acdatabase.entry}(db.ag, ...)
 }
 \arguments{
 \item{db.ag}{list}

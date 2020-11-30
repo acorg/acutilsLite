@@ -4,7 +4,7 @@
 \alias{ag.parent}
 \title{Get parent}
 \usage{
-ag.parent(ag)
+ag.parent(ag, gene = "BB")
 }
 \arguments{
 \item{ag}{environment: an antigen}

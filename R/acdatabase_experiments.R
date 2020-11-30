@@ -254,7 +254,7 @@ expdb.result <- function(lab,
 
 # Function to append a result
 #' @export
-exp.result.append <- function(exp,
+exper.result.append <- function(exp,
                               result){
 
   exp$results <- append(

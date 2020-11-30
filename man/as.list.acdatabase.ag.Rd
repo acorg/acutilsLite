@@ -4,7 +4,7 @@
 \alias{as.list.acdatabase.ag}
 \title{Convert database entry to list}
 \usage{
-\method{as.list}{acdatabase.ag}(record)
+\method{as.list}{acdatabase.ag}(record, ...)
 }
 \description{
 Antigen entries become lists of properties rather than environments. \code{.parent} entries are removed.
