@@ -2,7 +2,8 @@
 % Please edit documentation in R/acdatabase_utils.R
 \name{ag.clade}
 \alias{ag.clade}
-\title{Get antigen root clade}
+\title{Get antigen clade
+You can choose whether clade is searched for only in ag (how = 'self), only in the root virus (how = 'root), or anywhere in the inheritance (how = 'any')}
 \usage{
 ag.clade(ag, how = "self")
 }
@@ -13,5 +14,6 @@ ag.clade(ag, how = "self")
 char
 }
 \description{
-Get antigen root clade
+Get antigen clade
+You can choose whether clade is searched for only in ag (how = 'self), only in the root virus (how = 'root), or anywhere in the inheritance (how = 'any')
 }

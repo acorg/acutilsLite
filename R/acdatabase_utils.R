@@ -134,7 +134,7 @@ sr.attribute <- function(sr, attribute, inherit = T){
 #'
 #' @examples
 ag.long <- function(ag, agdb = get_agdb()){
-  acdb.Long(list(ag))
+  acdb.long(list(ag))
 }
 
 #' Get standardised long name for an antigen
@@ -161,9 +161,55 @@ ag.standardlong <- function(ag, agdb = get_agdb()){
 #' @export
 #'
 #' @examples
-ag.short <- function(ag, agdb = get_agdb()){
-  agdb.Short(list(ag))
+ag.short <- function(ag){
+
+  # Get shortened place
+  place <- ag.attribute(ag, "isolation.location")
+  place_short <- names(place_abvs)[match(toupper(place), place_abvs)]
+  if(is.na(place_short)) place_short <- place
+  place_short <- toupper(place_short)
+
+  if(place_short == "HANOI")           place_short <- "HN"
+  if(place_short == "NEW_YORK")        place_short <- "NY"
+  if(place_short == "SOUTH_AUSTRALIA") place_short <- "SA"
+  if(place_short == "NEW_CALEDONIA")   place_short <- "NW"
+  if(place_short == "FUKUOKA")         place_short <- "FK"
+  if(place_short == "HONG_KONG")       place_short <- "HK"
+  if(place_short == "NEW_CASTLE")      place_short <- "NC"
+  if(place_short == "SOUTH_AUCKLAND")  place_short <- "SAU"
+
+  # Get shortened year
+  year_short <- ag.attribute(ag, "isolation.date")
+  year_short <- substr(year_short, nchar(year_short)-1, nchar(year_short))
+
+  # Get egg passage details
+  if(ag.passageIncludesEgg(ag)) year_short <- paste0(year_short, "E")
+
+  # Assemble the short name
+  name_short <- paste(
+    c(
+      place_short,
+      ag.attribute(ag, "isolation.id"),
+      year_short
+    ),
+    collapse = "/"
+  )
+
+  # Add any alterations
+  subs <- unlist(ag.substitutions(ag, gene = "HA"))
+  name_short <- paste(c(name_short, subs), collapse = " ")
+
+  # Compare overall inheritance with HA inheritance
+  ag_base <- ag.inheritance(ag, gene = 'BB')[[1]]
+  if(ag_base$id == "BNDWF2"){
+    name_short <- paste("PR8", name_short)
+  }
+
+  # Return the name
+  name_short
+
 }
+
 
 
 #
@@ -262,7 +308,6 @@ ag.children <- function(ag, agdb, gene = 'BB', parents = NULL){
   if (is.null(parents)) parents = acdb.applyFunction(agdb, ag.parent, gene)
   parent_ids = parents%$%id
 
-
   parent_ids = (lapply(parent_ids, function(x) {
     if (is.null(x)) return (NA)
     else return(x)} ))
@@ -325,7 +370,76 @@ ag.descendents <- function(ag, agdb, gene = 'BB'){
   descendents[-1]
 }
 
+#' Get sequence for a gene from a record
+ag.sequence.pluck <- function(ag, gene){
 
+  # Get the ha alterations
+  ha_sequence <- match(gene, sapply(ag[["genes"]], function(x) x$gene))
+
+  # Add any substitutions listed
+  if(!is.na(ha_sequence)){
+    sequence <- ag[["genes"]][[ha_sequence]][["sequence"]]
+  } else {
+    sequence <- NA
+  }
+
+  # Return the substitutions
+  sequence
+
+}
+
+#' Calculate sequence for a gene from an inheritance (by finding a sequence and applying substitutions)
+ag.sequence.calculate <- function(inheritance, gene){
+  # Go through the inheritance tree
+  subs <- list()
+  for(ag in rev(inheritance)){
+    sequence <- ag.sequence.pluck(ag, gene)
+    if(!is.na(sequence)) break
+    subs     <- c(subs, list(ag.substitutions(ag, gene)))
+
+  }
+  id = ag$id
+  if(is.na(sequence)) return(NA)
+
+  # Apply any modifications to the sequence
+  for(sub in unlist(subs)){
+
+    # Fetch positions and substitutions
+    positions <- as.numeric(substr(sub, 2, nchar(sub)-1))
+    subfrom   <- substr(sub, 1, 1)
+    subto     <- substr(sub, nchar(sub), nchar(sub))
+
+    # Do some checks
+    if(sum(is.na(positions)) > 0){
+      stop("Did not understand substitutions")
+    }
+    if(sum(duplicated(positions)) > 0){
+      stop("Multiple substitutions at same site")
+    }
+
+    # Modify the sequence
+    for(x in seq_along(positions)){
+
+      if(substr(sequence, positions[x], positions[x]) != subfrom[x]){
+        warning(
+          sprintf(
+            "Sequence of parent does not match the substitution designated, substitution was %s but parent has %s at position %s.",
+            sub, substr(sequence, positions[x], positions[x]), as.character(positions[x])
+          )
+        )
+      }
+
+      substr(sequence, positions[x], positions[x]) <- subto[x]
+
+    }
+
+  }
+
+  # Return the sequence
+  seq = sequence
+  names(seq) = paste0('`',id, '`')
+  return(seq)
+}
 
 #' Calculate gene sequence
 #'
@@ -335,8 +449,112 @@ ag.descendents <- function(ag, agdb, gene = 'BB'){
 #'
 #' @return list
 #' @export
-#'
 #' @examples
+ag.sequence.full <- function(
+  ag,
+  gene = 'HA',
+  agdb = acutils:::get_agdb(),
+  inherit = T,
+  passage = T
+){
+  # is the ag sequenced?
+  sequence_self = ag.sequence.pluck(ag, gene)
+  names(sequence_self) = paste0('`',ag$id, '`')
+  if (!is.na(sequence_self)) return(sequence_self)
+
+  # are passage variants sequenced?
+  passage_siblings = ag.passageSiblings(ag, agdb)
+  sequence_passage_siblings = sapply(passage_siblings, ag.sequence.pluck, 'HA')
+  names(sequence_passage_siblings) = paste0('`',passage_siblings%$%id, '`')
+  sequence_passage_siblings = sequence_passage_siblings[!is.na(sequence_passage_siblings)]
+
+
+  # are parents sequenced?
+  inheritance = ag.inheritance(ag, gene)
+  sequence_parents = ag.sequence.calculate(inheritance, gene)
+  sequence_parents = sequence_parents[!is.na(sequence_parents)]
+
+  sequences_combined = list()
+  if (length(sequence_passage_siblings) > 0){
+    message('Sequence obtained from passage variant')
+    sequences_combined = c(sequences_combined, list(passage_sibs = sequence_passage_siblings))
+  }
+  if (length(sequence_parents) > 0){
+    message('Sequence obtained from parent')
+    sequences_combined = c(sequences_combined, list(parents = sequence_parents))
+  }
+  sequences_combined = unlist(sequences_combined)
+
+
+  if (length(sequences_combined) == 1) return(sequences_combined[1])
+  if (length(sequences_combined) > 1){
+    i = 1
+    while (i <= length(sequences_combined)){
+      if (any(sapply(sequences_combined[-i], stringr::str_detect, sequences_combined[[i]]))) {sequences_combined = sequences_combined[-i]; i = i-1}
+      i = i+1
+    }
+
+    if (length(sequences_combined)>1) {
+
+      substitutions = mapply(geneseq.diff, sequences_combined[1], sequences_combined[-1], SIMPLIFY = F)
+      subs_text = lapply(substitutions, paste, collapse = ' ')
+      subs_text_splitlines = paste(subs_text, collapse = '\n')
+      message('Multiple non-identical sequence matches found. Relative to the first sequence, others have substitutions:\n', subs_text_splitlines)
+
+    }
+
+
+    return(sequences_combined)
+  }
+
+
+
+  # are parent passage variants sequenced?
+  sequences_passaged_parents = list()
+  for (i in seq_along(inheritance[-length(inheritance)])){
+
+    sequences_passaged_parents[[unlist(inheritance[[i]]$id)]] = character()
+    inh_passage_sibs_i = ag.passageSiblings(inheritance[[i]], agdb)
+
+    inh_mod = inheritance
+
+    for (sib in inh_passage_sibs_i){
+
+      inh_mod[[i]] = sib
+      seq = ag.sequence.calculate(inh_mod, gene)
+      if (!is.na(seq)) {
+        sequences_passaged_parents[[i]] = c(sequences_passaged_parents[[i]], seq)
+        names(sequences_passaged_parents) = c(names(sequences_passaged_parents[[i]]), sib$id)}
+    }
+  }
+
+  sequences_passaged_parents = unlist(sequences_passaged_parents)
+
+  if (length(unlist(sequences_passaged_parents)) == 0){ message('No seqs found'); return(NA)}
+
+  message('Sequence calculated from passage variant of parent')
+  if (length(sequences_passaged_parents) == 1){
+    return(sequences_passaged_parents[[1]])
+  }
+
+  if (length(sequences_passaged_parents) > 1){
+
+    for (i in seq_along(sequences_passaged_parents)){
+      if (any(sapply(sequences_passaged_parents[-i], stringr::str_detect, sequences_passaged_parents[[i]]))) sequences_passaged_parents = sequences_passaged_parents[-i]
+    }
+
+    if (length(sequences_passaged_parents)>1) message('Multiple non-identical sequence matches found.')
+
+    return(sequences_passaged_parents)
+  }
+
+}
+
+
+#' Get sequence for gene
+#'
+#' If sequence not present in ag entry, looks in parent antigen entries for sequence, and applies substitutions
+#' @export
 ag.sequence <- function(
   ag,
   gene = 'HA',
@@ -367,10 +585,10 @@ ag.sequence <- function(
 
   # Go through the inheritance tree
   subs <- list()
-  for(ag in inheritance){
-    subs     <- c(subs, list(ag.substitutions(ag, gene)))
-    sequence <- ag.sequence(ag, gene)
+  for(ag in rev(inheritance)){
+    sequence <- ag.sequence.pluck(ag, gene)
     if(!is.null(sequence)) break
+    subs  <- c(subs, list(ag.substitutions(ag, gene)))
   }
   if(is.null(sequence)) return(NULL)
 
@@ -411,6 +629,7 @@ ag.sequence <- function(
   # Return the sequence
   sequence
 }
+
 
 #' Get gene substituions for antigen
 #'
@@ -541,7 +760,7 @@ ag.root <- function(ag, gene = 'HA'){
 
 
 
-#' Get antigen root clade
+#' Get antigen clade
 #'
 #'
 #' @param ag
@@ -558,8 +777,8 @@ ag.clade.self <- function(ag){
   return(first_matching_clade)
 }
 
-#' Get antigen root clade
-#'
+#' Get antigen clade
+#' You can choose whether clade is searched for only in ag (how = 'self), only in the root virus (how = 'root), or anywhere in the inheritance (how = 'any')
 #'
 #' @param ag
 #' @param how = c('self', 'root', 'any')
@@ -651,7 +870,7 @@ acdb.idToAttr <- function(ids, attribute, inherit = T, inherit.gene = 'HA', acdb
 #' @examples
 acdb.nameIDs <- function(ids, acdb, name = 'long'){
   if (name == 'long') return(acdb.idToAttr(ids, 'long', inherit = F, acdb = acdb))
-  if (name == 'short') return(agdb.Short(acdb.getIDs(ids, acdb)))
+  if (name == 'short') return(agdb.short(acdb.getIDs(ids, acdb)))
   else stop('name must be "long" or "short"')
   }
 
@@ -753,7 +972,6 @@ acdb.inGroups <- function(acdb, ...){
 
 
 
-
 #' Generate short name from antigen entries
 #'
 #' @param ags
@@ -761,56 +979,9 @@ acdb.inGroups <- function(acdb, ...){
 #' @return Returns a vector of short names
 #' @export
 #'
-agdb.Short <- function(agdb){
-  collate(acdb.applyFunction(agdb, function(ag){
+agdb.short <- function(agdb){
+  collate(acdb.applyFunction(agdb, ag.short))}
 
-    # Get shortened place
-    place <- ag.attribute(ag, "isolation.location")
-    place_short <- names(place_abvs)[match(toupper(place), place_abvs)]
-    if(is.na(place_short)) place_short <- place
-    place_short <- toupper(place_short)
-
-    if(place_short == "HANOI")           place_short <- "HN"
-    if(place_short == "NEW_YORK")        place_short <- "NY"
-    if(place_short == "SOUTH_AUSTRALIA") place_short <- "SA"
-    if(place_short == "NEW_CALEDONIA")   place_short <- "NW"
-    if(place_short == "FUKUOKA")         place_short <- "FK"
-    if(place_short == "HONG_KONG")       place_short <- "HK"
-    if(place_short == "NEW_CASTLE")      place_short <- "NC"
-    if(place_short == "SOUTH_AUCKLAND")  place_short <- "SAU"
-
-    # Get shortened year
-    year_short <- ag.attribute(ag, "isolation.date")
-    year_short <- substr(year_short, nchar(year_short)-1, nchar(year_short))
-
-    # Get egg passage details
-    if(passage_includes_egg(ag)) year_short <- paste0(year_short, "E")
-
-    # Assemble the short name
-    name_short <- paste(
-      c(
-        place_short,
-        ag.attribute(ag, "isolation.id"),
-        year_short
-      ),
-      collapse = "/"
-    )
-
-    # Add any alterations
-    subs <- unlist(ag.substitutions(ag, gene = "HA"))
-    name_short <- paste(c(name_short, subs), collapse = " ")
-
-    # Compare overall inheritance with HA inheritance
-    ag_base <- ag.inheritance(ag, gene = 'BB')[[1]]
-    if(ag_base$id == "BNDWF2"){
-      name_short <- paste("PR8", name_short)
-    }
-
-    # Return the name
-    name_short
-
-  }))
-}
 
 
 #' Select long name from antigen entries
@@ -820,7 +991,7 @@ agdb.Short <- function(agdb){
 #' @return Returns a vector of long names
 #' @export
 #'
-acdb.Long <- function(acdb){
+acdb.long <- function(acdb){
   collate(acdb.applyFunction(acdb, function(x){ x[["long"]] }))
 }
 
@@ -834,7 +1005,11 @@ acdb.Long <- function(acdb){
 #' @return
 #' @export
 agdb.substitutions <- function(agdb, inherit = T){
-  acdb.applyFunction(agdb, function(ag){ unlist(ag.substitutions(ag, gene = "HA", inherit)) })
+  o = acdb.applyFunction(agdb, function(ag){ unlist(ag.substitutions(ag, gene = "HA", inherit)) })
+  lapply(o, function(x){
+    if (is.null(x)) return(NA)
+    else return(x)
+    })
 }
 
 
@@ -849,7 +1024,15 @@ agdb.hasSubstitutions <- function(agdb, inherit = T){
   acdb.applyFunction(agdb, function(ag){ length(unlist(ag.substitutions(ag, gene = "HA", inherit))) > 0 })
 }
 
-
+#' Get sequences from agdb
+#'
+#' @param agdb
+#'
+#' @return
+#' @export
+agdb.sequences <- function(ags, gene = 'HA', inherit = T, fn = ag.sequence, agdb = get_agdb()){
+  as.list(acdb.applyFunction(ags, function(ag){ fn(ag, gene, agdb, inherit) }))
+}
 
 #' Get sequences from agdb
 #'
@@ -857,14 +1040,14 @@ agdb.hasSubstitutions <- function(agdb, inherit = T){
 #'
 #' @return
 #' @export
-agdb.sequences <- function(agdb, gene = 'HA', inherit = T){
-  acdb.applyFunction(agdb, function(ag){ ag.sequence(ag, gene, agdb, inherit) })
+agdb.sequencesFromMap <- function(ags, map, gene = 'HA', inherit = T, agdb = get_agdb()){
+  as.list(acdb.applyFunction(ags, function(ag){ ag.sequence.pluck(acdb.extract(agdb, id = map[ag$id]), gene) }))
 }
 
 #' @export
-agdb.year <- function(agdb){
+agdb.year <- function(agdb, gene = 'HA'){
   collate(acdb.applyFunction(agdb, function(x){
-    as.numeric(ag.attribute(x, "isolation.date"))
+    as.numeric(ag.attribute(x, "isolation.date", inherit.gene = gene))
   }))
 }
 
@@ -875,6 +1058,53 @@ agdb.root <- function(agdb, gene){
     ag.root(ag, gene)
   })
 }
+
+#'@export
+agdb.getOrder <- function(agdb){
+  agdb = unique(agdb)
+
+  clades = acdb.applyFunction(agdb, ag.clade, 'any')
+  years = agdb.year(agdb)
+  w = lapply(h3_clade_order, function(clade){
+    which(clades == clade)
+  })
+
+  out = unlist(sapply(w, function(x){
+    x[order(years[x])]
+  }))
+  return(unlist(agdb%$%id)[out])
+}
+
+#'@export
+srdb.getOrder <- function(sr, agdb){
+  sr = unique(sr)
+  srags = srdb.homologousAntigens(sr, agdb)
+  srags_order = agdb.getOrder(srags)
+  sr_order = unlist(lapply(srags_order, function(srag_id)return(which(unlist(sr%$%strain_id) == srag_id))))
+  return(unlist(sr%$%id)[sr_order])
+}
+
+#'@export
+agdb.getRank <- function(agdb){
+  agdb = unique(agdb)
+  order = agdb.getOrder(agdb)
+  rank = sapply(agdb%$%id, function(n)which(order == n))
+  names(rank) = agdb%$%id
+
+  return(rank)
+}
+
+#'@export
+srdb.getRank <- function(sr, agdb){
+  sr = unique(sr)
+  sr_order = srdb.getOrder(sr, agdb)
+  sr_rank = sapply(sr%$%id, function(n)which(sr_order == n))
+  names(sr_rank) = sr%$%id
+  return(sr_rank)
+
+}
+
+
 
 
 #
@@ -908,7 +1138,7 @@ ag.experiments <- function(
       exp_ag_ids <- vapply(
         exp_ags,
         function(ag){
-          passage_inheritance(ag)[[1]]$id
+          ag.passageSiblings(ag, agdb)[[1]]$id
         },
         character(1)
       )
@@ -1100,14 +1330,11 @@ acdb.find <- function(
   })
 
   # Compare values against criteria
-  result <- lapply(seq_along(values[[1]]), function(i){
-    matches <- do.call(cbind, lapply(seq_along(criterias), function(j){
-      db_criteria[[j]] == values[[j]][i]
-    }))
-    which(rowSums(!matches) == 0)
-  })
 
-  # Return result, simplified if length one
+  matches = do.call(cbind, lapply(seq_along(db_criteria), function(i){db_criteria[[i]] == values[[i]]}))
+  result = which(rowSums(!matches) == 0)
+
+
   if(simplify && length(result) == 1){
     result[[1]]
   } else {
@@ -1159,7 +1386,7 @@ acdb.search <- function(
     db[matches[[1]]]
   } else {
     lapply(matches, function(x){
-      db[x]
+      db[[x]]
     })
   }
 
@@ -1269,7 +1496,7 @@ acdb.matchNamesIndices <- function(strain_names, acdb, include_aliases = TRUE, m
 #' @param strain_names names to be matched
 #' @param acdb
 #' @param include_aliases should aliases be searched?
-#' @param multiple_match_error should a name matchingmultiple db entries throw an error?
+#' @param multiple_match_error should a name matching multiple db entries throw an error?
 #'
 #' @return Returns a list of standardised names and extracted information
 #' @export
@@ -1346,6 +1573,22 @@ srdb.matchAnimalIDsIndices <- function(srdb, animal_id){
 #    OPERATIONS
 #
 ##########################
+#'@export
+unlist_safe <- function(l){
+    if (length(l) == 0) return(l)
+    long_entries <- sum(sapply(l, function(y) length(y) > 1 )) != 0
+    null_entries <- sum(sapply(l, function(y) length(y) == 0 )) != 0
+    if (long_entries){
+      message('some list entries with length > 1')
+      return(l)
+    }
+    if (null_entries) {
+      message('NULL coersed to NA')
+      l[lengths(l) == 0] = NA
+      return(unlist(l))
+    }
+    return(unlist(l))
+}
 
 #' Apply a function over an acdb
 #'
@@ -1358,7 +1601,7 @@ srdb.matchAnimalIDsIndices <- function(srdb, animal_id){
 #' @export
 #'
 #' @examples
-acdb.applyFunction <- function(acdb, fn, ...){
+acdb.applyFunction <- function(acdb, fn, ..., unlist = F){
 
   # Fetch ids and convert to factors
   ids        <- collate(lapply(acdb, function(x){ x$id }))
@@ -1372,7 +1615,11 @@ acdb.applyFunction <- function(acdb, fn, ...){
   )
 
   # Return the matched results
-  results[as.numeric(ids_factor)]
+  matched_res = results[as.numeric(ids_factor)]
+
+  if (unlist) return(unlist_safe(matched_res))
+
+  return(matched_res)
 
 }
 

@@ -1,7 +1,24 @@
+#' Handling titers:
+#'
+#'
+#'
+#'
+#'
+#'
+#'
+#'
+#'
+#'
+
+
+
+
 
 #' Merge titers
 #'
-#' Merge titers (formatted like "240/480/240") by taking mean of logs
+#' Merge titers (formatted like "240/480/240") by taking mean of logs (and exponentiating back)
+#'
+#' When logs are taken <40 is converted to 20 for averaging
 #'
 #' @param titers char: like "240/480/240"
 #'
@@ -9,7 +26,7 @@
 #' @export
 #'
 #' @examples
-mergeTiters <- function(titers){
+mergeTiters <- function(titers, threshold = 10){
   titers <- unlist(lapply(titers, strsplit, split = "/", fixed = T))
   titers[titers == "*"] <- NA
   titers       <- titers[!is.na(titers)]
@@ -18,11 +35,11 @@ mergeTiters <- function(titers){
   logtiters    <- Racmacs::titer_to_logtiter(titers)
   meanlogtiter <- mean(logtiters, na.rm = TRUE)
   meantiter    <- round(2^meanlogtiter*10)
-  if(meantiter < 10) meantiter <- "<10"
+  if(meantiter < threshold) meantiter <- paste0('<', as.character(threshold))
   as.character(meantiter)
 }
 
-#' cCombine titers
+#' Combine titers
 #'
 #' Combine vector of titers to "240/480/240"-like
 #'
@@ -43,16 +60,18 @@ combineTiters <- function(titers){
 #'
 #' Get merged titer table from experimental database.
 #'
-#' @param expdb char: like "240/480/240"
+#' @param expdb char
 #' @param duplicate_titers char: "mean" or "combine"
+#' @param threshold
 #'
-#' @return char: merged titer table
+#' @return array of char: merged titer table
 #' @export
 #'
 #' @examples
 expdb.merge <- function(
   expdb,
-  duplicate_titers = "mean"
+  duplicate_titers = "mean",
+  threshold = 10
 ){
 
   all_agids <- unique(unlist(lapply(expdb, function(exp){
@@ -81,8 +100,8 @@ expdb.merge <- function(
     table_array[ag_matches, sr_matches, i] <- result$titers
   }
 
-  if(duplicate_titers == "mean")         { mergeFn <- mergeTiters   }
-  else if(duplicate_titers == "combine") { mergeFn <- combineTiters }
+  if(duplicate_titers == "mean")         { table_merge <- apply(table_array, c(1, 2), mergeTiters, threshold)   }
+  else if(duplicate_titers == "combine") { table_merge <- apply(table_array, c(1, 2), combineTiters) }
   else { stop("'duplicate_titers' must be one of 'mean' or 'combine'") }
 
   table_merge <- apply(table_array, c(1, 2), mergeFn)
@@ -98,8 +117,9 @@ expdb.merge <- function(
 #' @param exp char: like "240/480/240"
 #' @param expect_repeats bool: whether repeat titers are expected
 #' @param merge_passage bool: not implemented
+#' @param threshold
 #'
-#' @return char: merged titer table
+#' @return array of char: merged titer table
 #'
 #' @rdname
 #' @export
@@ -108,7 +128,9 @@ expdb.merge <- function(
 exper.merge <- function(
   exp,
   expect_repeats = FALSE,
-  merge_passage = FALSE
+  duplicate_titers = "mean",
+  merge_passage = FALSE,
+  threshold = 10
 ){
 
   # Check input
@@ -147,7 +169,8 @@ exper.merge <- function(
   names(hau) <- all_agids
 
   # Perform the merge
-  table_merge <- apply(table_array, c(1,2), mergeTiters)
+  if (duplicate_titers == "mean") table_merge <- apply(table_array, c(1,2), mergeTiters, threshold)
+  if (duplicate_titers == "combine") table_merge <- apply(table_array, c(1,2), combineTiters)
   rownames(table_merge) <- all_agids
   colnames(table_merge) <- all_srids
 

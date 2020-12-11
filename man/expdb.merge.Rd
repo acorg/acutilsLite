@@ -4,15 +4,17 @@
 \alias{expdb.merge}
 \title{Merge from expdb}
 \usage{
-expdb.merge(expdb, duplicate_titers = "mean")
+expdb.merge(expdb, duplicate_titers = "mean", threshold = 10)
 }
 \arguments{
-\item{expdb}{char: like "240/480/240"}
+\item{expdb}{char}
 
 \item{duplicate_titers}{char: "mean" or "combine"}
+
+\item{threshold}{}
 }
 \value{
-char: merged titer table
+array of char: merged titer table
 }
 \description{
 Get merged titer table from experimental database.

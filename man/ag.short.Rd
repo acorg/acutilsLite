@@ -4,7 +4,7 @@
 \alias{ag.short}
 \title{Construct short name for an antigen}
 \usage{
-ag.short(ag, agdb = get_agdb())
+ag.short(ag)
 }
 \arguments{
 \item{ag}{environment: an antigen}

@@ -39,3 +39,14 @@ subs.split.list <- function(subs.list){
   return(l)
 }
 
+#'@export
+geneseq.diff <- function(seq1, seq2){
+  min_len = min(stringr::str_length(seq1), stringr::str_length(seq2))
+  if (stringr::str_length(seq1) != stringr::str_length(seq2) ) warning('Sequence lengths differ: comapring only first ', as.character(min_len), ' loci' )
+
+  original_split <- str_split(seq1, '')[[1]][1:min_len]
+  derived_split <- str_split(seq2, '')[[1]][1:min_len]
+
+
+  return(unlist(mapply(function(s1, s2, n){if (s1!=s2){return(paste0(s1,n,s2))}}, original_split, derived_split, 1:length(original_split) )))
+}

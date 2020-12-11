@@ -210,13 +210,64 @@ aa.values <- function(){
   )
 }
 
+#' @export
+aa.colors <- function(){
+  aa     <- aa.values()
+  aacols <- as.vector(coloraa(rbind(aa)))
+  names(aacols) <- aa
+  aacols
+}
 
+#' @export
+coloraa <- function(x, alpha = 0.5, simplify = T){
+  if(is.vector(x)) x <- rbind(x)
+  if(ncol(x) == 0) return(x)
+  aacolors   <- x
+  aacolors[] <- ""
+  aacolors[x %in% c("G","A","S","T")                     ] <- "orange"
+  aacolors[x %in% c("C","V","I","L","P","F","Y","M","W") ] <- "green"
+  aacolors[x %in% c("N","Q","H","Z")                     ] <- "magenta"
+  aacolors[x %in% c("D","E","B")                         ] <- "red"
+  aacolors[x %in% c("K","R")                             ] <- "blue"
+  aacolors[x %in% c("*", "X", "-", ".", "")              ] <- "grey50"
+  if(sum(aacolors == "") > 0){
+    stop(sprintf("aas '%s' not recognised.", paste(unique(x[aacolors == ""]), collapse = ", ")))
+  }
+  aacolors[] <- adjustcolor(aacolors, alpha.f = alpha)
+  if (simplify){
+    if (length(aacolors) == 1) return(aacolors[[1]])
+  }
 
+    aacolors
+}
 
+#'@export
+aacolors_al <- c(
+  "D" = "#F7CF08",
+  "E" = "#CD8D00",
+  "R" = "#B2A1FF",
+  "H" = "#7571BC",
+  "K" = "#440FAE",
+  "N" = "#18E0F7",
+  "Q" = "#0080FF",
+  "S" = "#0F52BA",
+  "T" = "navy",
+  "C" = "#00F000",
+  "G" = "#4CBB17",
+  "P" = "#1A4F30",
+  "A" = "#EB1919",
+  "I" = "#F93BBB",
+  "L" = "#FF2976",
+  "M" = "#FF5A3D",
+  "F" = "#C34822",
+  "W" = "#A30000",
+  "Y" = "#941651",
+  "V" = "#681226"
+)
 
 #' All known two-letter place name abbreviations
 #' @export
-{place_abvs <- c(
+place_abvs <- c(
   "-A" = "SAUDI-ARABIA",
   "-B" = "SUPHAN-BURI",
   "-D" = "NORDRHEIN-WESTFALEN",
@@ -846,4 +897,4 @@ aa.values <- function(){
   "ZX" = "CHUNGBUK",
   "ZY" = "SAITAMA",
   "OT" = "GOETEBORG"
-)}
+)

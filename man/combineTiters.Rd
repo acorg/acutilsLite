@@ -2,7 +2,7 @@
 % Please edit documentation in R/acdatabase_merging.R
 \name{combineTiters}
 \alias{combineTiters}
-\title{cCombine titers}
+\title{Combine titers}
 \usage{
 combineTiters(titers)
 }

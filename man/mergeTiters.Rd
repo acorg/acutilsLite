@@ -2,9 +2,9 @@
 % Please edit documentation in R/acdatabase_merging.R
 \name{mergeTiters}
 \alias{mergeTiters}
-\title{Merge titers}
+\title{Handling titers:}
 \usage{
-mergeTiters(titers)
+mergeTiters(titers, threshold = 10)
 }
 \arguments{
 \item{titers}{char: like "240/480/240"}
@@ -13,5 +13,12 @@ mergeTiters(titers)
 char: merged titer
 }
 \description{
-Merge titers (formatted like "240/480/240") by taking mean of logs
+Handling titers:
+}
+\details{
+Merge titers
+
+Merge titers (formatted like "240/480/240") by taking mean of logs (and exponentiating back)
+
+When logs are taken <40 is converted to 20 for averaging
 }

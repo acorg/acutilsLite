@@ -7,7 +7,7 @@
 
 
 #' @export
-titertable.toLong <- function(
+squaretiters.toLong <- function(
   titertable,
   agdb,
   srdb
@@ -31,7 +31,7 @@ titertable.toLong <- function(
 }
 
 #' @export
-titertable.addNames <- function(
+squaretiters.addNames <- function(
   titertable,
   agdb = get_agdb(),
   srdb = get_srdb(),
@@ -68,7 +68,7 @@ titertable.addNames <- function(
 #' @export
 #'
 #' @examples
-exper.longTibble <- function(exp){
+exper.toLongTibble <- function(exp){
 
   # Fetch list of long-format results tibbles
   results_list <- lapply(seq_along(exp$results), function(x){
@@ -108,10 +108,10 @@ exper.longTibble <- function(exp){
 #' @export
 #'
 #' @examples
-expdb.longTibble <- function(expdb){
+expdb.toLongTibble <- function(expdb){
 
   # Fetch list of long-format experiment tibbles
-  exps_list <- lapply(expdb, exper.longTibble)
+  exps_list <- lapply(expdb, exper.toLongTibble)
 
   # Merge into one long tibble
   exps_tibble <- do.call(dplyr::bind_rows, exps_list)
@@ -142,7 +142,7 @@ expdb.longTibble <- function(expdb){
 #' @export
 #'
 #' @examples
-titerlong.plotdata <- function(
+longtiters.plotdata <- function(
   titertable_long
 ){
 
@@ -151,8 +151,8 @@ titerlong.plotdata <- function(
     dplyr::mutate(
       ag_cluster  = agdb.clusters(ag_records),
       ag_year     = agdb.year(ag_records),
-      ag_long     = acdb.Long(ag_records),
-      ag_short    = agdb.Short(ag_records),
+      ag_long     = acdb.long(ag_records),
+      ag_short    = agdb.short(ag_records),
       ag_plotid   = factor(
         ag,
         levels = unique(ag[order(ag_cluster, ag_year)])
@@ -161,8 +161,8 @@ titerlong.plotdata <- function(
     dplyr::mutate(
       sr_cluster  = agdb.clusters(srag_records),
       sr_year     = agdb.year(srag_records),
-      sr_long     = acdb.Long(sr_records),
-      sr_short    = agdb.Short(srag_records),
+      sr_long     = acdb.long(sr_records),
+      sr_short    = agdb.short(srag_records),
       sr_plotid   = factor(
         sr,
         levels = unique(sr[order(sr_cluster, sr_year)])
@@ -184,18 +184,53 @@ titerlong.plotdata <- function(
 }
 
 #'@export
-titerlong.splitSubstitutions <- function(titerlong){
-  if (! ('substitutions') %in% names(titerlong)) stop("Need a column called 'substitutions'")
+longtiters.splitSubstitutions <- function(titerlong){
+  if (! ('ag_substitutions') %in% names(titerlong)) stop("Need a column called 'ag_substitutions'")
 
-  splitsubs = purrr::transpose(subs.split.list(titerlong$substitutions))
+  splitsubs = purrr::transpose(subs.split.list(titerlong$ag_substitutions))
 
-  titerlong$from = splitsubs$from
-  titerlong$at = splitsubs$at
-  titerlong$to = splitsubs$to
-
+  titerlong$ag_subs_from = unlist_safe(splitsubs$from)
+  titerlong$ag_subs_at = unlist_safe(splitsubs$at)
+  titerlong$ag_subs_to = unlist_safe(splitsubs$to)
 
   return(titerlong)
 }
+
+
+#'@export
+longtiters.orderSera = function(longTiters, antigens = F){
+  sr_rank = srdb.getRank(longTiters$sr_records, agdb)
+  longTiters %>% mutate(sr_rank = unlist(acdb.applyFunction(sr_records, function(sr)return(sr_rank[[sr$id]])))) -> longTiters
+
+  if (antigens){
+    ag_rank_list = agdb.getRank(longTiters$ag_records)
+
+    print(length(unlist(acdb.applyFunction(longTiters$ag_records, function(ag)return(ag_rank_list[[ag$id]])))))
+    print(length((acdb.applyFunction(longTiters$ag_records, function(ag)return(ag_rank_list[[ag$id]])))))
+
+    longTiters %>% mutate(ag_rank = unlist(acdb.applyFunction(ag_records, function(ag)return(ag_rank_list[[ag$id]])))) -> longTiters
+    #longTiters = group_by(longTiters, ag_rank, sr_rank)
+    longTiters = arrange(longTiters, ag_rank, sr_rank, .by_group = F)
+    longTiters = tibble.factorize(longTiters, c('ag','ag_short','ag_long','sr','sr_short','sr_long'))
+    return(select(longTiters, -c(sr_rank, ag_rank)))
+  }
+  longTiters = arrange(longTiters, sr_rank, .by_group = T)
+  longTiters = tibble.factorize(longTiters, c('ag','ag_short','ag_long','sr','sr_short','sr_long'))
+
+  return(select(longTiters, -c(sr_rank)))
+
+}
+
+#'@export
+tibble.factorize <- function(tib, columns){
+  for (col in columns){
+    tib[[col]] = factor(tib[[col]], levels = unique(tib[[col]]))
+  }
+
+  return(tib)
+}
+
+
 
 #' Summarise by serum cluster
 #'
@@ -318,5 +353,44 @@ summarise_plotdata_by_ag_cluster <- function(plotdata){
 }
 
 
+#' this converts logtiters with less thans to logtiters where <3 -> 2
+#'@export
+logtiter.toPlot <- function (titers)
+{
+  titer_types <- Racmacs::titer_types(titers)
+  threshold_titers <- titer_types == "lessthan" | titer_types ==
+    "morethan"
+  log_titers <- titers
+  log_titers[titer_types == "omitted"] <- NA
+  log_titers[threshold_titers] <- substr(log_titers[threshold_titers],
+                                         2, nchar(log_titers[threshold_titers]))
+  mode(log_titers) <- "numeric"
+  if (!all(titer_types == 'measured') ) {
+    threshold_location = max(log_titers[threshold_titers])
+    #message(paste0('<', as.character(threshold_location), ' converted to ', as.character(threshold_location-1)))
+  }
 
+  log_titers[titer_types == "lessthan"] <- log_titers[titer_types == "lessthan"] - 1
+  log_titers[titer_types == "morethan"] <- log_titers[titer_types == "morethan"] + 1
+  if ('morethan' %in% titer_types) print(titers)
+  log_titers
+}
 
+#'@export
+titer.toLog = function(titers){
+  titer_types <- Racmacs::titer_types(titers)
+  threshold_titers <- titer_types == "lessthan" | titer_types ==
+    "morethan"
+  log_titers <- titers
+  log_titers[titer_types == "omitted"] <- NA
+  log_titers[threshold_titers] <- substr(log_titers[threshold_titers],
+                                         2, nchar(log_titers[threshold_titers]))
+  mode(log_titers) <- "numeric"
+  log_titers <- log2(log_titers/10)
+  mode(log_titers) <- "character"
+  log_titers[titer_types == "lessthan"] <- paste0('<', log_titers[titer_types == "lessthan"])
+  log_titers[titer_types == "morethan"] <- paste0('>' , log_titers[titer_types == "morethan"])
+  if ('morethan' %in% titer_types) print(titers)
+
+  log_titers
+}

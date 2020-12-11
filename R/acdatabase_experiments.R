@@ -132,6 +132,7 @@ read.expdb <- function(file){
 
 }
 
+# Read all databases in directory
 #' @export
 read.expdbs <- function(root_dir){
   exp_dirs <- list.files(file.path(root_dir, "experiments"), full.names = T)
@@ -295,6 +296,7 @@ write.expdb <- function(db, file){
 
 }
 
+#' Get titer table from result entry
 #' @export
 result.titerTable <- function(results){
   titertable <- results$titers
