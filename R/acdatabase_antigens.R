@@ -88,8 +88,6 @@ agdb.loadTest <- function(){
 #'
 #' @return list
 #' @export
-#'
-#' @examples
 read.agdb <- function(file){
 
   agdb.new(
@@ -108,15 +106,13 @@ read.agdb <- function(file){
 
 #' Write database to file
 #'
-#' Writes an agdb to specified location. If a database with the same name already exists at that location, provides summary of additions, deletions and edits to database
+#' Writes an agdb to specified location. If a database with the same name already exists at that location, provides summary of additions, deletions and edits to database.
 #'
 #' @param agdb list
 #' @param file char
 #'
 #' @return list
 #' @export
-#'
-#' @examples
 write.agdb <- function(db, file){
 
   # Check for unique ids
@@ -215,8 +211,6 @@ ag.nameorder <- c(
 #' @param db.database list
 #'
 #' @return list
-#'
-#' @examples
 outbox.agdb.database <- function(db.database){
 
   for(n in seq_along(db.database)){
@@ -285,8 +279,6 @@ outbox.agdb.database <- function(db.database){
 #'
 #' @return character
 #' @export
-#'
-#' @examples
 agdb.ag <- function(id,
                     strain,
                     long,
@@ -353,8 +345,14 @@ agdb.ag <- function(id,
 }
 
 
-
-
+#' Duplicate an antigen entry
+#'
+#' @export
+ag.duplicate <- function(ag){
+  ag_dup = as.environment(as.list(ag))
+  class(ag_dup) = class(ag)
+  return(ag_dup)
+}
 
 
 
@@ -363,12 +361,7 @@ agdb.ag <- function(id,
 #'
 #' Creates an antigen database from a list of antigen entries. For information on database structure, see ?agdb.
 #'
-#' @param db list
-#'
-#' @return environment
 #' @export
-#'
-#' @examples
 agdb.new <- function(db = list()){
 
   # Fetch antigen ids
@@ -427,8 +420,6 @@ agdb.new <- function(db = list()){
 #'
 #' @return character
 #' @export
-#'
-#' @examples
 agdb.id <- function(db, id = NULL, excluded_ids = NULL){
 
   # Add database ids to excluded ids
@@ -461,8 +452,6 @@ agdb.id <- function(db, id = NULL, excluded_ids = NULL){
 #'
 #' @return list
 #' @export
-#'
-#' @examples
 agdb.isolation <- function(id,
                            date,
                            cell,
@@ -492,8 +481,6 @@ agdb.isolation <- function(id,
 #'
 #' @return list
 #' @export
-#'
-#' @examples
 agdb.genes <- function(gene,
                        sequence,
                        clade,
@@ -522,8 +509,6 @@ agdb.genes <- function(gene,
 #' #'
 #' @return list
 #' @export
-#'
-#' @examples
 agdb.alterations <- function(gene,
                              parent_id,
                              substitutions){
@@ -552,8 +537,6 @@ agdb.alterations <- function(gene,
 #' @param comments
 #' @return list
 #' @export
-#'
-#' @examples
 agdb.passage <- function(history,
                          egg,
                          cell,
@@ -605,9 +588,6 @@ agdb.passage <- function(history,
 #' @param ag environment
 #'
 #' @return list
-#' @export
-#'
-#' @examples
 agdb.append <- function(agdb, ag){
 
   # Check for duplicate antigens
@@ -620,5 +600,5 @@ agdb.append <- function(agdb, ag){
   if(sum(duplicates) > 0) stop("A duplicate antigen was found")
 
   # Otherwise append as normal
-  append(agdb, ag)
+  append(agdb, list(ag))
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/acdatabase_utils.R
 \name{ag.clade.self}
 \alias{ag.clade.self}
-\title{Get antigen root clade}
+\title{Get antigen clade}
 \usage{
 ag.clade.self(ag)
 }
@@ -13,5 +13,5 @@ ag.clade.self(ag)
 char
 }
 \description{
-Get antigen root clade
+Get antigen clade
 }

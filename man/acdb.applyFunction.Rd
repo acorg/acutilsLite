@@ -4,7 +4,7 @@
 \alias{acdb.applyFunction}
 \title{Apply a function over an acdb}
 \usage{
-acdb.applyFunction(acdb, fn, ...)
+acdb.applyFunction(acdb, fn, ..., unlist = F)
 }
 \arguments{
 \item{acdb}{list}

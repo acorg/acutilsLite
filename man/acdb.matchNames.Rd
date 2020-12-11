@@ -16,7 +16,7 @@ acdb.matchNames(
 
 \item{include_aliases}{should aliases be searched?}
 
-\item{multiple_match_error}{should a name matchingmultiple db entries throw an error?}
+\item{multiple_match_error}{should a name matching multiple db entries throw an error?}
 }
 \value{
 Returns a list of standardised names and extracted information

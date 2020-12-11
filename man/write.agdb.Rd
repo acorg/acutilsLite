@@ -15,5 +15,5 @@ write.agdb(db, file)
 list
 }
 \description{
-Writes an agdb to specified location. If a database with the same name already exists at that location, provides summary of additions, deletions and edits to database
+Writes an agdb to specified location. If a database with the same name already exists at that location, provides summary of additions, deletions and edits to database.
 }

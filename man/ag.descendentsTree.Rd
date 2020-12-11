@@ -4,7 +4,7 @@
 \alias{ag.descendentsTree}
 \title{Get all descendants}
 \usage{
-ag.descendentsTree(ag, agdb, gene = "BB")
+ag.descendentsTree(ag, agdb, gene = "BB", .parents = NULL)
 }
 \arguments{
 \item{ag}{environment: an antigen}

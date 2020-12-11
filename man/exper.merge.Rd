@@ -4,7 +4,7 @@
 \alias{exper.merge}
 \title{Merge from exp}
 \usage{
-exper.merge(exp, expect_repeats = FALSE, merge_passage = FALSE)
+exper.merge(exp, expect_repeats = FALSE, merge_passage = FALSE, threshold = 10)
 }
 \arguments{
 \item{exp}{char: like "240/480/240"}
@@ -12,9 +12,11 @@ exper.merge(exp, expect_repeats = FALSE, merge_passage = FALSE)
 \item{expect_repeats}{bool: whether repeat titers are expected}
 
 \item{merge_passage}{bool: not implemented}
+
+\item{threshold}{}
 }
 \value{
-char: merged titer table
+array of char: merged titer table
 }
 \description{
 Get merged titer table from single experiment.

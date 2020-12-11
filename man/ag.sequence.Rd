@@ -2,18 +2,10 @@
 % Please edit documentation in R/acdatabase_utils.R
 \name{ag.sequence}
 \alias{ag.sequence}
-\title{Calculate gene sequence}
+\title{Get sequence for gene}
 \usage{
 ag.sequence(ag, gene = "HA", agdb = acutils:::get_agdb(), inherit = T)
 }
-\arguments{
-\item{ag}{environment: an antigen}
-
-\item{gene}{char: which gene to get sequence for}
-}
-\value{
-list
-}
 \description{
-Calculate gene sequence
+If sequence not present in ag entry, looks in parent antigen entries for sequence, and applies substitutions
 }

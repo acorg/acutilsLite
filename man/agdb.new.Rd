@@ -6,12 +6,6 @@
 \usage{
 agdb.new(db = list())
 }
-\arguments{
-\item{db}{list}
-}
-\value{
-environment
-}
 \description{
 Creates an antigen database from a list of antigen entries. For information on database structure, see ?agdb.
 }
