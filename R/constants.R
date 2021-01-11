@@ -21,7 +21,8 @@ h3_clade_order <- c(
   "3C.2A1A",
   "3C.2A1B",
   "3C.2A2",
-  "Other"
+  "Other",
+  "Clade missing"
 )
 
 
@@ -66,6 +67,21 @@ h3_cluster_colors <- c(
   "SW13" = "grey80",
   "HK14" = "grey80"
 )
+
+
+#' @export
+h3_clade_colors <- c(
+  "3C.3" = '#7570b3',
+  "3C.3A" = '#e7298a',
+  "3C.2A" = '#66a61e',
+  "3C.2A1" = '#1b9e77',
+  "3C.2A1A" = '#e7298a',
+  "3C.2A1B" = '#a6761d',
+  "3C.2A2" = '#e6ab02',
+  "Other" = 'black',
+  "Clade missing" = 'grey50'
+)
+
 
 
 #' @export

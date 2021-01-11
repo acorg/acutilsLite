@@ -4,7 +4,15 @@
 \alias{exper.merge}
 \title{Merge from exp}
 \usage{
-exper.merge(exp, expect_repeats = FALSE, merge_passage = FALSE, threshold = 10)
+exper.merge(
+  exp,
+  expect_repeats = FALSE,
+  duplicate_titers = "mean",
+  merge_passage = FALSE,
+  lowerthreshold = 10,
+  upperthreshold = Inf,
+  threshold_masking = F
+)
 }
 \arguments{
 \item{exp}{char: like "240/480/240"}

@@ -71,6 +71,73 @@ results.nameorder <- c(
 
 
 
+##########################
+#
+#    READ AND WRITE
+#
+##########################
+
+
+
+# Read a database
+#' @export
+read.expdb <- function(file){
+
+  expdb.new(
+    jsonlite::read_json(
+      path = file,
+      simplifyVector    = TRUE,
+      simplifyDataFrame = FALSE,
+      simplifyMatrix    = FALSE
+    )
+  )
+
+}
+
+# Read all databases in directory
+#' @export
+read.expdbs <- function(root_dir){
+  exp_dirs <- list.files(file.path(root_dir, "experiments"), full.names = T)
+  expdbs <- lapply(exp_dirs, function(exp_dir){
+    if(file.exists(file.path(exp_dir, "results.json"))){
+      read.expdb(file.path(exp_dir, "results.json"))
+    }
+  })
+  unlist(expdbs, recursive = FALSE)
+}
+
+
+
+# Write a database
+#' @export
+write.expdb <- function(db, file){
+
+  # Check for unique ids
+  if(sum(duplicated(db%$%id)) > 0) {
+    stop("Database contains duplicate ids")
+  }
+
+  # Check results matches titer dims
+
+  # Write out the database
+  dbtext <- jsonlite::toJSON(
+    x          = outbox.expdb(acdb.as.list(db)),
+    path       = file,
+    pretty     = 4,
+    auto_unbox = TRUE
+  )
+
+  # # Tidy up ag ids, sr ids and titers
+  # agids <- stringr::str_extract_all(dbtext, stringr::regex('"antigen_ids": (\\[.*?\\])', dotall = TRUE))
+  # for(agid in agids[[1]]) dbtext <- gsub(agid, gsub("\n[ ]*", " ", agid), dbtext, fixed = TRUE)
+  #
+  # srids <- stringr::str_extract_all(dbtext, stringr::regex('"serum_ids": (\\[.*?\\])', dotall = TRUE))
+  # for(srid in srids[[1]]) dbtext <- gsub(srid, gsub("\n[ ]*", " ", srid), dbtext, fixed = TRUE)
+
+  write(dbtext, file)
+
+}
+
 # A function to mark what properties should not be unboxed in json
 outbox.expdb <- function(db){
 
@@ -117,32 +184,17 @@ outbox.expdb <- function(db){
 }
 
 
-# Read a database
-#' @export
-read.expdb <- function(file){
 
-  expdb.new(
-    jsonlite::read_json(
-      path = file,
-      simplifyVector    = TRUE,
-      simplifyDataFrame = FALSE,
-      simplifyMatrix    = FALSE
-    )
-  )
 
-}
 
-# Read all databases in directory
-#' @export
-read.expdbs <- function(root_dir){
-  exp_dirs <- list.files(file.path(root_dir, "experiments"), full.names = T)
-  expdbs <- lapply(exp_dirs, function(exp_dir){
-    if(file.exists(file.path(exp_dir, "results.json"))){
-      read.expdb(file.path(exp_dir, "results.json"))
-    }
-  })
-  unlist(expdbs, recursive = FALSE)
-}
+
+##########################
+#
+#    CONSTRUCTORS
+#
+##########################
+
+
 
 # Function to generate a new database
 #' @export
@@ -266,35 +318,20 @@ exper.result.append <- function(exp,
 
 }
 
-# Write a database
-#' @export
-write.expdb <- function(db, file){
 
-  # Check for unique ids
-  if(sum(duplicated(db%$%id)) > 0) {
-    stop("Database contains duplicate ids")
-  }
 
-  # Check results matches titer dims
+####################
+#
+#      MODIFY
+#
+####################
 
-  # Write out the database
-  dbtext <- jsonlite::toJSON(
-    x          = outbox.expdb(acdb.as.list(db)),
-    path       = file,
-    pretty     = 4,
-    auto_unbox = TRUE
-  )
+#################
+#
+# MISC
+#
+################
 
-  # # Tidy up ag ids, sr ids and titers
-  # agids <- stringr::str_extract_all(dbtext, stringr::regex('"antigen_ids": (\\[.*?\\])', dotall = TRUE))
-  # for(agid in agids[[1]]) dbtext <- gsub(agid, gsub("\n[ ]*", " ", agid), dbtext, fixed = TRUE)
-  #
-  # srids <- stringr::str_extract_all(dbtext, stringr::regex('"serum_ids": (\\[.*?\\])', dotall = TRUE))
-  # for(srid in srids[[1]]) dbtext <- gsub(srid, gsub("\n[ ]*", " ", srid), dbtext, fixed = TRUE)
-
-  write(dbtext, file)
-
-}
 
 #' Get titer table from result entry
 #' @export

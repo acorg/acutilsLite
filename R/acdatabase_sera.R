@@ -282,3 +282,48 @@ srdb.new <- function(db = list()){
 
 
 
+##########################
+#
+#    MODIFY
+#
+##########################
+
+#' Append a serum to an srdb
+#'
+#'
+#' @param srdb list
+#' @param sr environment
+#' @export
+#' @return list
+srdb.append <- function(srdb, sr){
+
+  # Check for duplicate antigens
+  duplicates <- do.call(
+    acdb.find,
+    c(list(db = agdb), as.list(ag))
+  )
+
+  # Stop if duplicates are found
+  if(sum(duplicates) > 0) stop("A duplicate serum was found")
+
+  # Otherwise append as normal
+  append(srdb, list(sr))
+}
+
+
+
+#' Merge sera in serum database
+#'
+#'
+#' @param agdb list
+#' @param sr_id_keep char
+#' @param sr_id_remove char
+#' @export
+#' @return list
+srdb.merge <- function(srdb, sr_id_keep, sr_id_remove){
+  stop('Not implemented')
+}
+
+
+
+
