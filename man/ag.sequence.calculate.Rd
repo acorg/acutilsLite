@@ -4,7 +4,7 @@
 \alias{ag.sequence.calculate}
 \title{Calculate sequence for a gene from an inheritance (by finding a sequence and applying substitutions)}
 \usage{
-ag.sequence.calculate(inheritance, gene)
+ag.sequence.calculate(inheritance, gene = "HA")
 }
 \description{
 Calculate sequence for a gene from an inheritance (by finding a sequence and applying substitutions)

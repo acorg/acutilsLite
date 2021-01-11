@@ -4,14 +4,7 @@
 \alias{agdb.sequencesFromMap}
 \title{Get sequences from agdb}
 \usage{
-agdb.sequencesFromMap(
-  ags,
-  map,
-  gene = "HA",
-  inherit = T,
-  fn = ag.sequence,
-  agdb = get_agdb()
-)
+agdb.sequencesFromMap(ags, map, gene = "HA", inherit = T, agdb = get_agdb())
 }
 \arguments{
 \item{agdb}{}

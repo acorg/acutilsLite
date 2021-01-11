@@ -4,7 +4,7 @@
 \alias{ag.sequence.pluck}
 \title{Get sequence for a gene from a record}
 \usage{
-ag.sequence.pluck(ag, gene)
+ag.sequence.pluck(ag, gene = "HA")
 }
 \description{
 Get sequence for a gene from a record

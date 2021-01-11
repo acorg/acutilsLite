@@ -4,7 +4,12 @@
 \alias{expdb.merge}
 \title{Merge from expdb}
 \usage{
-expdb.merge(expdb, duplicate_titers = "mean", threshold = 10)
+expdb.merge(
+  expdb,
+  duplicate_titers = "mean",
+  lowerthreshold = 10,
+  upperthreshold = Inf
+)
 }
 \arguments{
 \item{expdb}{char}

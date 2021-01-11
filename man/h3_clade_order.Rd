@@ -5,7 +5,7 @@
 \alias{h3_clade_order}
 \title{order for plotting}
 \format{
-An object of class \code{character} of length 8.
+An object of class \code{character} of length 9.
 }
 \usage{
 h3_clade_order

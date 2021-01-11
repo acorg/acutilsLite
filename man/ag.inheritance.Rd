@@ -16,4 +16,5 @@ list
 }
 \description{
 Get a list of parent antigens for a gene in an antigen. The list will follow the parent_id's for the specified component ('HA', 'NA', or 'backbone') until reaching the root.
+Passed antigen is last element of list
 }

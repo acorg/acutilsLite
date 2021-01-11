@@ -573,20 +573,12 @@ agdb.passage <- function(history,
 #
 ##########################
 
-#
-# modify single ag entry
-#
-
-#
-# modify agdb
-#
-
 #' Append an antigen to an agdb
 #'
 #'
 #' @param agdb list
 #' @param ag environment
-#'
+#' @export
 #' @return list
 agdb.append <- function(agdb, ag){
 
@@ -601,4 +593,18 @@ agdb.append <- function(agdb, ag){
 
   # Otherwise append as normal
   append(agdb, list(ag))
+}
+
+
+
+#' Merge antigens in agdb
+#'
+#'
+#' @param agdb list
+#' @param ag_id_keep char
+#' @param ag_id_remove char
+#' @export
+#' @return list
+agdb.merge <- function(agdb, ag_id1, ag_id2){
+  stop('Not implemented')
 }

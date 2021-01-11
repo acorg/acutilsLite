@@ -1,0 +1,53 @@
+How acutilsLite works:
+----------------------
+
+acdatabase_antigens, acdatabase_sera, acdatabase_experiments
+
+Constutors and modifiers for databases
+Able to make an entry, and do smoe more advanced operations:
+	Merge antigens or sera
+	...
+
+
+
+acdatabase_utils
+
+Functions to get information from an antigen
+And apply such fucntions to a list of antigens
+
+
+
+acdatabase_titertables
+
+Construct and operate on titertables - square and long
+Long is preferred
+
+
+
+acdatabase_titertables
+
+Functions to do with merging titer tables
+
+
+
+acdatabase_{x}
+
+Helper functions - usually for _utils or _titertables
+eg. acdatabase_sequences has functions operating on strings representing sequences ('KQLQKMI...') or substitutions ('F193S') etc
+
+
+_________________________________________________________
+
+Pattern to use
+--------------
+
+The package is designed to make it easy to work with data across experiments. You can load all titers from all experiments in your database, then filter to get the desired subset with the id columns: ag, sr, exp
+
+Repeat titers are indicated in the exp_repeat column
+
+Then columns can be added by operating on the {ag/sr/exp}_records columns.
+
+
+
+
+
