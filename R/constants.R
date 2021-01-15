@@ -73,11 +73,11 @@ h3_cluster_colors <- c(
 h3_clade_colors <- c(
   "3C.3" = '#7570b3',
   "3C.3A" = '#e7298a',
-  "3C.2A" = '#66a61e',
-  "3C.2A1" = '#1b9e77',
-  "3C.2A1A" = '#e7298a',
-  "3C.2A1B" = '#a6761d',
-  "3C.2A2" = '#e6ab02',
+  "3C.2A" = '#0B691B',
+  "3C.2A1" = '#7D2B07',
+  "3C.2A1A" = '#E2D11F',
+  "3C.2A1B" = '#F4B329',
+  "3C.2A2" = '#1FD16E',
   "Other" = 'black',
   "Clade missing" = 'grey50'
 )
