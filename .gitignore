@@ -1,9 +1,10 @@
 .Rproj.user
 .Rhistory
 .RData
-.DS_sotre
+.DS_store
 tests/.DS_store
 sandbox.R
 package_creation.R
 package_structure.txt
 other/**
+.Rbuildignore

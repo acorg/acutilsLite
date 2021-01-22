@@ -389,10 +389,10 @@ tibble.factorize <- function(tib, columns){
 #'@export
 longtiters.getAbsentMuts = function(longTiters.muts){
   if (!all(c('ag_subs_from', 'ag_subs_at', 'ag_subs_to') %in% colnames(longTiters.muts) )) stop("'ag_subs_from', 'ag_subs_at', 'ag_subs_to' columns required")
-  longTiters.muts %>% select(ag_subs_from, ag_subs_at, ag_subs_to) %>% distinct() %>% transmute(from.at.to = mapply(paste , ag_subs_from, ag_subs_at, ag_subs_to)) -> subs_present
-  all_possible_subs = expand.grid( ag_subs_from.at = unique(longTiters.muts$ag_subs_from.at), ag_subs_to = unique(longTiters.muts$ag_subs_to))
+  longTiters.muts %>% select(ag_subs_at, ag_subs_to) %>% distinct() %>% transmute(at.to = mapply(paste , ag_subs_at, ag_subs_to)) -> subs_present
+  all_possible_subs = expand.grid( ag_subs_at = unique(longTiters.muts$ag_subs_at), ag_subs_to = aa.values()[1:20])
   all_possible_subs %>%
-    mutate(present = lapply(paste(ag_subs_from.at, ag_subs_to), function(x){x %in% subs_present$from.at.to} )) %>% filter(present == F) -> subs_absent #%>% filter(present == F) -> included_subs
+    mutate(present = lapply(paste(ag_subs_at, ag_subs_to), function(x){x %in% subs_present$at.to} )) %>% filter(present == F) -> subs_absent #%>% filter(present == F) -> included_subs
   subs_absent
 }
 
@@ -405,9 +405,9 @@ longtiters.addComparisonTiter <- function(longtiters.target, longtiters.comparat
 }
 
 #'@export
-longtiters.subsTrafficLight <- function(longtiters.muts, srag_seq_map){
+longtiters.subsTrafficLight <- function(longTiters.muts, srag_seq_map, agdb = acutilsLite:::get_agdb()){
 
-  longTiters.muts %>% mutate(srag_sequence = as.list(agdb.sequencesFromMap(srag_records, srag_seq_map))) -> longTiters.muts
+  longTiters.muts %>% mutate(srag_sequence = as.list(agdb.sequencesFromMap(srag_records, srag_seq_map, agdb = agdb))) -> longTiters.muts
   longTiters.muts %>% mutate(serum_mut = mapply(function(subs, srag_sequence){
     sub = subs.split(subs)[[1]];
     sr_aa = str_sub(srag_sequence, sub['at'], sub['at'] )

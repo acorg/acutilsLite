@@ -778,7 +778,7 @@ ag.clade <- function(ag, how = 'self'){
 
 
     # check descendants
-    desc = ag.descendents(ag, agdb, gene = 'HA')
+    desc = ag.descendents(ag, agdb = acutilsLite:::get_agdb(), gene = 'HA')
     desc.clades = lapply(inh, ag.clade.self)
 
     if (length(unique(  desc.clades[!is.na(desc.clades)]  )) > 1) stop('Multiple clade matches:', unique(  desc.clades[!is.na(desc.clades)]  ))

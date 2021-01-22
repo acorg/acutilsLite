@@ -1,15 +1,15 @@
 #'@export
-titerplot.colourFacetLabels <- function(g, ordered_colours){
-  g <- ggplot_gtable(ggplot_build(gg.muts))
-  stripr <- which( grepl('strip-r', g$layout$name) | grepl('strip-t', g$layout$name) )
+titerplot.colourFacetLabels <- function(gg, ordered_colours){
+  gg <- ggplot_gtable(ggplot_build(gg))
+  stripr <- which( grepl('strip-r', gg$layout$name) | grepl('strip-t', gg$layout$name) )
   fills <- ordered_colours
   k <- 1
   for (i in stripr) {
-    j <- which(grepl('rect', g$grobs[[i]]$grobs[[1]]$childrenOrder))
-    g$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- fills[k]
+    j <- which(grepl('rect', gg$grobs[[i]]$grobs[[1]]$childrenOrder))
+    gg$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- fills[k]
     k <- k+1
   }
-  g
+  gg
 }
 
 
@@ -38,7 +38,6 @@ titerplot.styleaxes = function(gg, x = 'detect', Yscale){
   }
   if (x == 'ag'){
     map <- setNames( longtiters$ag_short, longtiters$ag )
-    print(map)
     gg = gg + scale_x_discrete(labels = map[(unique(as.character(longtiters$ag)))]) + xlab('Antigen')
   }
   return(gg)
