@@ -762,7 +762,7 @@ ag.clade.self <- function(ag){
 #' @export
 #'
 #' @examples
-ag.clade <- function(ag, how = 'self'){
+ag.clade <- function(ag, how = 'self', agdb = acutilsLite:::get_agdb()){
   inh = ag.inheritance(ag, gene = 'HA')
   inh.clades = lapply(inh, ag.clade.self)
   if (how == 'root') return(inh.clades[[1]])
@@ -778,7 +778,7 @@ ag.clade <- function(ag, how = 'self'){
 
 
     # check descendants
-    desc = ag.descendents(ag, agdb = acutilsLite:::get_agdb(), gene = 'HA')
+    desc = ag.descendents(ag, agdb = agdb, gene = 'HA')
     desc.clades = lapply(inh, ag.clade.self)
 
     if (length(unique(  desc.clades[!is.na(desc.clades)]  )) > 1) stop('Multiple clade matches:', unique(  desc.clades[!is.na(desc.clades)]  ))
@@ -1783,4 +1783,54 @@ acids.applyFunction <- function(ids, acdb, fn){
   acdb <- acdb.getIDs(ids, acdb)
   return(acdb.applyFunction(acdb, fn))
 }
+
+##########################
+#
+#    OTHER
+#
+##########################
+
+#'@export
+toTable = function(list_of_vectors){
+  longest = max(sapply(list_of_vectors, length))
+
+  list_of_vectors = lapply(list_of_vectors, function(v){c(v, rep('', longest - length(v)))})
+
+  mat = do.call(cbind, list_of_vectors)
+
+  colnames(mat) = names(list_of_vectors)
+  mat
+}
+
+
+#'@export
+simpleTable = function(text_entries, ...){
+
+  extra_properties = list(...)
+
+  out_table = text_entries
+
+
+  for (col_i in seq_len(dim(text_entries)[[2]]) ){
+
+
+      arg_list = list(x = out_table[,col_i])
+
+      for (i in seq_along(extra_properties)){
+        property_name = names(extra_properties)[[i]]
+        property_value = unname(extra_properties)[[i]]
+
+        arg_list[property_name] = list(property_value[,col_i])
+      }
+
+      out_table[,col_i] = do.call(kableExtra::cell_spec, arg_list)
+  }
+
+  out_table_html = (kableExtra::kbl(out_table, format = 'html',  escape = F)
+                                )
+
+
+  kableExtra::kable_material_dark(out_table_html)
+}
+
 

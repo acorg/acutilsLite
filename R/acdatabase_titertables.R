@@ -164,7 +164,8 @@ longtiters.addRecords <- function(longtiters, agdb = get_agdb(), srdb = get_srdb
 #'
 #' @examples
 longtiters.plotdata <- function(
-  titertable_long
+  titertable_long,
+  agdb = acutilsLite:::get_agdb()
 ){
 
   # Fill the additional data needed for plotting
@@ -174,7 +175,7 @@ longtiters.plotdata <- function(
       ag_year     = agdb.year(ag_records),
       ag_long     = acdb.long(ag_records),
       ag_short    = agdb.short(ag_records),
-      ag_rootclade = acdb.applyFunction(.$ag_records, ag.clade, 'any')
+      ag_rootclade = acdb.applyFunction(.$ag_records, ag.clade, 'any', agdb)
     ) %>%
     dplyr::mutate(
       sr_cluster  = agdb.clusters(srag_records),
@@ -182,7 +183,7 @@ longtiters.plotdata <- function(
       sr_long     = acdb.long(sr_records),
       sr_short    = agdb.short(srag_records),
       logtiter = Racmacs::titer_to_logtiter(titer),
-      sr_rootclade = acdb.applyFunction(.$srag_records, ag.clade, 'any')
+      sr_rootclade = acdb.applyFunction(.$srag_records, ag.clade, 'any', agdb)
     ) -> plotdata
 
   if("titer" %in% colnames(plotdata)){

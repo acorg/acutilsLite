@@ -206,9 +206,9 @@ sequences_plot = function(sequences, mask = rep(1, length(sequences)), mutagenis
   gg.seq.grey <- ggplot(sequences_matrix_filtered_masked_long) +
     geom_tile(aes(x = site, y = id,  fill = aa)) +
     scale_fill_manual( values = c(aacolors_al, '.' = 'grey')) +
-    geom_text(aes(x = site, y = id,  label = aa), size = 9,  colour = 'white') +
+    geom_text(aes(x = site, y = id,  label = aa), size = 7,  colour = 'white') +
     theme(legend.position = "none",
-          axis.text.x = element_text(size = 15))
+          axis.text.x = element_text(size = 11))
 
   if (length(unique(mask)) > 1 &  length(unique(mask)) != dim(sequences_matrix_filtered_masked)[[1]]){
     mask_df = data.frame(x=rep(1,dim(sequences_matrix_filtered_masked)[[1]]),
@@ -222,7 +222,8 @@ sequences_plot = function(sequences, mask = rep(1, length(sequences)), mutagenis
       geom_line(data = line_df, mapping = aes(x=x,y=y), color = "white", size = 2)
   }
 
-  gg.seq.grey
+  gg.seq.grey +
+    theme(axis.text.x = element_text(size = 11, angle = 90, vjust = 0.5, hjust = 1))
 }
 
 
