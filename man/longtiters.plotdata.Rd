@@ -4,7 +4,7 @@
 \alias{longtiters.plotdata}
 \title{Add tibble plotting columns}
 \usage{
-longtiters.plotdata(titertable_long)
+longtiters.plotdata(titertable_long, agdb = acutilsLite:::get_agdb())
 }
 \arguments{
 \item{titertable_long}{tibble}

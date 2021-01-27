@@ -164,7 +164,8 @@ longtiters.addRecords <- function(longtiters, agdb = get_agdb(), srdb = get_srdb
 #'
 #' @examples
 longtiters.plotdata <- function(
-  titertable_long
+  titertable_long,
+  agdb = acutilsLite:::get_agdb()
 ){
 
   # Fill the additional data needed for plotting
@@ -174,7 +175,7 @@ longtiters.plotdata <- function(
       ag_year     = agdb.year(ag_records),
       ag_long     = acdb.long(ag_records),
       ag_short    = agdb.short(ag_records),
-      ag_rootclade = acdb.applyFunction(.$ag_records, ag.clade, 'any')
+      ag_rootclade = acdb.applyFunction(.$ag_records, ag.clade, 'any', agdb)
     ) %>%
     dplyr::mutate(
       sr_cluster  = agdb.clusters(srag_records),
@@ -182,7 +183,7 @@ longtiters.plotdata <- function(
       sr_long     = acdb.long(sr_records),
       sr_short    = agdb.short(srag_records),
       logtiter = Racmacs::titer_to_logtiter(titer),
-      sr_rootclade = acdb.applyFunction(.$srag_records, ag.clade, 'any')
+      sr_rootclade = acdb.applyFunction(.$srag_records, ag.clade, 'any', agdb)
     ) -> plotdata
 
   if("titer" %in% colnames(plotdata)){
@@ -389,10 +390,10 @@ tibble.factorize <- function(tib, columns){
 #'@export
 longtiters.getAbsentMuts = function(longTiters.muts){
   if (!all(c('ag_subs_from', 'ag_subs_at', 'ag_subs_to') %in% colnames(longTiters.muts) )) stop("'ag_subs_from', 'ag_subs_at', 'ag_subs_to' columns required")
-  longTiters.muts %>% select(ag_subs_from, ag_subs_at, ag_subs_to) %>% distinct() %>% transmute(from.at.to = mapply(paste , ag_subs_from, ag_subs_at, ag_subs_to)) -> subs_present
-  all_possible_subs = expand.grid( ag_subs_from.at = unique(longTiters.muts$ag_subs_from.at), ag_subs_to = unique(longTiters.muts$ag_subs_to))
+  longTiters.muts %>% select(ag_subs_at, ag_subs_to) %>% distinct() %>% transmute(at.to = mapply(paste , ag_subs_at, ag_subs_to)) -> subs_present
+  all_possible_subs = expand.grid( ag_subs_at = unique(longTiters.muts$ag_subs_at), ag_subs_to = aa.values()[1:20])
   all_possible_subs %>%
-    mutate(present = lapply(paste(ag_subs_from.at, ag_subs_to), function(x){x %in% subs_present$from.at.to} )) %>% filter(present == F) -> subs_absent #%>% filter(present == F) -> included_subs
+    mutate(present = lapply(paste(ag_subs_at, ag_subs_to), function(x){x %in% subs_present$at.to} )) %>% filter(present == F) -> subs_absent #%>% filter(present == F) -> included_subs
   subs_absent
 }
 
@@ -405,9 +406,9 @@ longtiters.addComparisonTiter <- function(longtiters.target, longtiters.comparat
 }
 
 #'@export
-longtiters.subsTrafficLight <- function(longtiters.muts, srag_seq_map){
+longtiters.subsTrafficLight <- function(longTiters.muts, srag_seq_map, agdb = acutilsLite:::get_agdb()){
 
-  longTiters.muts %>% mutate(srag_sequence = as.list(agdb.sequencesFromMap(srag_records, srag_seq_map))) -> longTiters.muts
+  longTiters.muts %>% mutate(srag_sequence = as.list(agdb.sequencesFromMap(srag_records, srag_seq_map, agdb = agdb))) -> longTiters.muts
   longTiters.muts %>% mutate(serum_mut = mapply(function(subs, srag_sequence){
     sub = subs.split(subs)[[1]];
     sr_aa = str_sub(srag_sequence, sub['at'], sub['at'] )

@@ -5,7 +5,7 @@
 \title{Get antigen clade
 You can choose whether clade is searched for only in ag (how = 'self), only in the root virus (how = 'root), or anywhere in the inheritance (how = 'any')}
 \usage{
-ag.clade(ag, how = "self")
+ag.clade(ag, how = "self", agdb = acutilsLite:::get_agdb())
 }
 \arguments{
 \item{how}{= c('self', 'root', 'any')}
