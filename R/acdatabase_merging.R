@@ -203,7 +203,8 @@ mergeTiters <- function(titers, lowerthreshold = 10, upperthreshold = Inf, thres
 #'
 #' @examples
 combineTiters <- function(titers){
-  if(length(titers) == 0) return("*")
+
+  if(length(titers) == 0 | isTRUE(all(titers %in% c('', '*'))) |isTRUE(all(is.na(titers)))) return("*")
   if(length(titers) == 1) return(titers)
   titers <- titers[!is.na(titers) & titers != "*"]
   paste(titers, collapse = "/")

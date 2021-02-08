@@ -224,13 +224,13 @@ longtiters.splitSubstitutions <- function(titerlong){
 }
 
 #'@export
-longtiters.order <- function(longtiters, antigens = T, sera = T, by = 'clade'){
+longtiters.order <- function(longtiters, antigens = T, sera = T, by = 'clade', lvls = acutilsLite::h3_clade_order){
   if (by == 'clade'){
     if (antigens){
       if (!all(c('ag_rootclade', 'ag_year') %in% colnames(longtiters))) stop('Some required columns are missing - run longtiters.plotdata()')
 
       mutate(longtiters,
-             ag_rootclade = factor(ag_rootclade, levels = h3_clade_order),
+             ag_rootclade = factor(ag_rootclade, levels = lvls),
              ag_year = factor(ag_year, levels = unique(ag_year[order(as.numeric(ag_year))])),
       ) -> longtiters
 
@@ -244,7 +244,7 @@ longtiters.order <- function(longtiters, antigens = T, sera = T, by = 'clade'){
       if (!all(c('sr_rootclade', 'sr_year') %in% colnames(longtiters))) stop('Some required columns are missing - run longtiters.plotdata()')
 
       mutate(longtiters,
-             sr_rootclade = factor(sr_rootclade, levels = h3_clade_order),
+             sr_rootclade = factor(sr_rootclade, levels = lvls),
              sr_year = factor(sr_year, levels = unique(sr_year[order(as.numeric(sr_year))])),
       ) -> longtiters
 
