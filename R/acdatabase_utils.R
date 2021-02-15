@@ -1791,10 +1791,10 @@ acids.applyFunction <- function(ids, acdb, fn){
 ##########################
 
 #'@export
-toTable = function(list_of_vectors){
+toTable = function(list_of_vectors, pad = ''){
   longest = max(sapply(list_of_vectors, length))
 
-  list_of_vectors = lapply(list_of_vectors, function(v){c(v, rep('', longest - length(v)))})
+  list_of_vectors = lapply(list_of_vectors, function(v){c(v, rep(pad, longest - length(v)))})
 
   mat = do.call(cbind, list_of_vectors)
 
@@ -1804,21 +1804,24 @@ toTable = function(list_of_vectors){
 
 
 #'@export
-simpleTable = function(text_entries, ...){
+simpleTable = function(text_entries, cell_spec = list(), col_spec = list()){
 
-  extra_properties = list(...)
+
 
   out_table = text_entries
+
+
 
 
   for (col_i in seq_len(dim(text_entries)[[2]]) ){
 
 
-      arg_list = list(x = out_table[,col_i])
+      arg_list = list(x = out_table[,col_i], format = 'html')
 
-      for (i in seq_along(extra_properties)){
-        property_name = names(extra_properties)[[i]]
-        property_value = unname(extra_properties)[[i]]
+      for (i in seq_along(cell_spec)){
+
+        property_name = names(cell_spec)[[i]]
+        property_value = unname(cell_spec)[[i]]
 
         arg_list[property_name] = list(property_value[,col_i])
       }
@@ -1826,11 +1829,28 @@ simpleTable = function(text_entries, ...){
       out_table[,col_i] = do.call(kableExtra::cell_spec, arg_list)
   }
 
-  out_table_html = (kableExtra::kbl(out_table, format = 'html',  escape = F)
-                                )
+  out_table_html = kableExtra::kbl(out_table, format = 'html',  escape = F)
+
+  out_table_html = kableExtra::kable_styling(out_table_html)
 
 
-  kableExtra::kable_material_dark(out_table_html)
+  for (col_i in seq_len(dim(text_entries)[[2]]) ){
+
+
+    arg_list = list(kable_input = out_table_html, column = col_i)
+
+    for (i in seq_along(col_spec)){
+
+      property_name = names(col_spec)[[i]]
+      property_value = unname(col_spec)[[i]]
+
+      arg_list[property_name] = list(property_value[,col_i])
+    }
+
+    out_table_html = do.call(kableExtra::column_spec, arg_list)
+  }
+
+  out_table_html
 }
 
 

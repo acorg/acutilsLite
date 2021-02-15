@@ -7,7 +7,8 @@
 sequences_plot(
   sequences,
   mask = rep(1, length(sequences)),
-  mutagenised_pos = NULL
+  mutagenised_pos = NULL,
+  outtype = "pdf"
 )
 }
 \description{

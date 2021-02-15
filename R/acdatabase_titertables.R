@@ -224,13 +224,13 @@ longtiters.splitSubstitutions <- function(titerlong){
 }
 
 #'@export
-longtiters.order <- function(longtiters, antigens = T, sera = T, by = 'clade'){
+longtiters.order <- function(longtiters, antigens = T, sera = T, by = 'clade', lvls = acutilsLite::h3_clade_order){
   if (by == 'clade'){
     if (antigens){
       if (!all(c('ag_rootclade', 'ag_year') %in% colnames(longtiters))) stop('Some required columns are missing - run longtiters.plotdata()')
 
       mutate(longtiters,
-             ag_rootclade = factor(ag_rootclade, levels = h3_clade_order),
+             ag_rootclade = factor(ag_rootclade, levels = lvls),
              ag_year = factor(ag_year, levels = unique(ag_year[order(as.numeric(ag_year))])),
       ) -> longtiters
 
@@ -244,7 +244,7 @@ longtiters.order <- function(longtiters, antigens = T, sera = T, by = 'clade'){
       if (!all(c('sr_rootclade', 'sr_year') %in% colnames(longtiters))) stop('Some required columns are missing - run longtiters.plotdata()')
 
       mutate(longtiters,
-             sr_rootclade = factor(sr_rootclade, levels = h3_clade_order),
+             sr_rootclade = factor(sr_rootclade, levels = lvls),
              sr_year = factor(sr_year, levels = unique(sr_year[order(as.numeric(sr_year))])),
       ) -> longtiters
 
@@ -340,7 +340,7 @@ longtiters.colbase <- function(longtiters, longtiters.maxSet, by = 'sr'){
     sr_maxes = c()
     for(sri in unique(longtiters$sr)){
       if (sri %in% longtiters.maxSet$sr){
-        sr_maxes[sri] = max(logtiter.toPlot(titer.toLog(filter(longtiters.maxSet, sr == sri)$titer)))
+        sr_maxes[sri] = max(logtiter.toPlot(titer.toLog(filter(longtiters.maxSet, sr == sri)$titer)), na.rm = T)
       }
       else{
         warning('Serum ', sr, ' not present in maxSet titer table - max titer from target titer table being used.')
@@ -360,7 +360,7 @@ longtiters.colbase <- function(longtiters, longtiters.maxSet, by = 'sr'){
     ag_maxes = c()
     for(agi in unique(longtiters$ag)){
       if (agi %in% longtiters.maxSet$ag){
-        ag_maxes[agi] = max(logtiter.toPlot(titer.toLog(filter(longtiters.maxSet, ag == agi)$titer)))
+        ag_maxes[agi] = max(logtiter.toPlot(titer.toLog(filter(longtiters.maxSet, ag == agi)$titer)), na.rm = T)
       }
       else{
         warning('Antigen ', ag, ' not present in maxSet titer table - max titer from target titer table being used.')

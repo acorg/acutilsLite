@@ -182,9 +182,10 @@ mergeTiters <- function(titers, lowerthreshold = 10, upperthreshold = Inf, thres
     meantiter <- paste0('<', as.character(lowerthreshold))
   }
 
-  if(isTRUE(meantiter > as.numeric(upperthreshold) &titers != paste0('>', as.character(upperthreshold)))){
+
+  if(isTRUE(meantiter > as.numeric(upperthreshold))){
     meantiter <- paste0('>', as.character(upperthreshold))
-    warning("titers ", combineTiters(titers), " merged to ", meantiter, ' (upper thresh = ', upperthreshold, ')')
+    #warning("titers ", combineTiters(titers), " merged to ", meantiter, ' (upper thresh = ', upperthreshold, ')')
 
   }
 
@@ -203,7 +204,8 @@ mergeTiters <- function(titers, lowerthreshold = 10, upperthreshold = Inf, thres
 #'
 #' @examples
 combineTiters <- function(titers){
-  if(length(titers) == 0) return("*")
+
+  if(length(titers) == 0 | isTRUE(all(titers %in% c('', '*'))) |isTRUE(all(is.na(titers)))) return("*")
   if(length(titers) == 1) return(titers)
   titers <- titers[!is.na(titers) & titers != "*"]
   paste(titers, collapse = "/")
