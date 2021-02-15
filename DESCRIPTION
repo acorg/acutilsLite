@@ -5,7 +5,7 @@ Authors@R:
     person(given = "Sam",
            family = "Turner",
            role = c("aut", "cre"),
-           email = "samturner0306@gmail.com.com")
+           email = "samturner0306@gmail.com")
 Description: Functions for reading in and manipulating CPE databases.  This is a simplified version of Sam W's acutils package.
 License: MIT + file LICENSE
 Encoding: UTF-8
