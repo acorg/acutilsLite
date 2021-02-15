@@ -15,7 +15,7 @@ titerplot.colourFacetLabels <- function(gg, ordered_colours){
 
 
 #'@export
-titerplot.styleaxes = function(gg, x = 'detect', Yscale, expand_multiplier = 0){
+titerplot.styleaxes = function(gg, x = 'detect', Yscale, expand_multiplier = 0, gridlines = T){
 
   if (x=='detect') x = as.character(rlang::quo_get_expr(ggplot_build(gg)$plot$layers[[1]]$mapping$x))
 
@@ -23,13 +23,25 @@ titerplot.styleaxes = function(gg, x = 'detect', Yscale, expand_multiplier = 0){
   gg = gg+theme_classic() +
     theme(axis.text.x = element_text(size = 11, angle = 90, vjust = 0.5, hjust=1),
           axis.text.y = element_text(size = 11),
-          panel.border = element_rect(color = "grey50", fill  = NA))+
+          panel.border = element_rect(color = "grey50", fill  = NA)) +
+    scale_y_continuous(breaks = Yscale[[1]], labels = Yscale[[2]], expand = c(0.02,0.02), limits = range(Yscale[[1]]) + c(-1,1)*expand_multiplier)
+
+if (gridlines){
+  gg= gg+
     theme(axis.line=element_line(),
           panel.grid.major.y = element_line(colour="grey80", size=0.25),
           panel.grid.major.x = element_line(colour="grey80", size=0.25),
-          strip.text.x = element_text(size = 15)) +
-    scale_y_continuous(breaks = Yscale[[1]], labels = Yscale[[2]], expand = c(0.02,0.02), limits = range(Yscale[[1]]) + c(-1,1)*expand_multiplier)
+          strip.text.x = element_text(size = 15))
+}
+  else{
 
+    gg= gg+
+      theme(axis.line=element_line(),
+            panel.grid.major.y = element_blank(),
+            panel.grid.major.x =element_blank(),
+            strip.text.x = element_text(size = 15))
+
+  }
 
   if (x == 'sr'){
     map <- setNames( longtiters$sr_short, longtiters$sr )
@@ -67,7 +79,7 @@ titerplot.facet <- function(gg, facet = 'detect'){
 }
 
 #'@export
-titerplot.shadeClades <- function(gg, x = 'detect', colors = acutilsLite::h3_clade_colors){
+titerplot.shadeClades <- function(gg, x = 'detect', colors = acutilsLite::h3_clade_colors, transparency = 80){
 
   if (x=='detect') x = as.character(rlang::quo_get_expr(ggplot_build(gg)$plot$layers[[1]]$mapping$x))
 
@@ -76,8 +88,36 @@ titerplot.shadeClades <- function(gg, x = 'detect', colors = acutilsLite::h3_cla
 
   longtiters = gg$data
   yrange = ggplot_build(gg)$layout$panel_scales_y[[1]]$limits
-  gg =gg+ geom_tile(data = distinct(longtiters[,c(x, x_clades)]), aes_string(x=x, y = mean(yrange), fill = x_clades) , width = 1, height = diff(yrange)-.1) +  # background calde colours
-    scale_fill_manual(values = extras.t_col(colors,80), name = 'Clade')
+
+  dat = arrange(distinct(longtiters[, c(x, x_clades)]), x_clades)
+  v_lines = tibble(x = numeric(), y = numeric())
+  r_prev = dat[[1,x_clades]]
+  for (i in seq_along(unlist(dat[,x_clades]))){
+    r = dat[[i,x_clades]]
+    if (isTRUE(r!=r_prev )){
+      v_lines = add_row(v_lines, x = i, y = min(yrange) )
+      v_lines = add_row(v_lines, x = i, y = max(yrange) )
+    }
+    r_prev = r
+  }
+
+  gg = gg + geom_vline(xintercept = unique(v_lines$x)-.5, size = .15, color = 'grey20')
+
+
+  gg = gg +
+    geom_tile(
+    data = dat,
+    aes_string(
+      x = x,
+      y = mean(yrange),
+      fill = x_clades
+    ) ,
+    width = 1,
+    height = diff(yrange) - .1
+  ) +
+    #geom_line(data = v_lines, aes(x = x, y = y)) +
+    # background calde colours
+    scale_fill_manual(values = extras.t_col(colors, transparency), name = 'Clade')
 
   gg$layers = c(gg$layers[[length(gg$layers)]], gg$layers[-length(gg$layers)])
 
@@ -272,7 +312,7 @@ sequences_plot = function(sequences,
 
 
     simpleTable(sequences_matrix_filtered_masked,
-                background = cols)
+                col_spec = list(background = cols))
 
 
   }
@@ -312,7 +352,7 @@ extras.getYscale <- function(range, kind = 'logtiters', upperthreshold = F, thre
 
 
 #'@export
-extras.getYscaleFromTiters <- function(logtiters, kind = 'logtiters', default_range = c(2, 8)){
+extras.getYscaleFromTiters <- function(logtiters, kind = 'logtiters', default_range = c(3, 8)){
   logtiters = unlist(logtiters)[!is.na(unlist(logtiters))]
   titers.checkThresholds(logtiters)
 

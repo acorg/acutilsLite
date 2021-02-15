@@ -182,9 +182,10 @@ mergeTiters <- function(titers, lowerthreshold = 10, upperthreshold = Inf, thres
     meantiter <- paste0('<', as.character(lowerthreshold))
   }
 
-  if(isTRUE(meantiter > as.numeric(upperthreshold) &titers != paste0('>', as.character(upperthreshold)))){
+
+  if(isTRUE(meantiter > as.numeric(upperthreshold))){
     meantiter <- paste0('>', as.character(upperthreshold))
-    warning("titers ", combineTiters(titers), " merged to ", meantiter, ' (upper thresh = ', upperthreshold, ')')
+    #warning("titers ", combineTiters(titers), " merged to ", meantiter, ' (upper thresh = ', upperthreshold, ')')
 
   }
 

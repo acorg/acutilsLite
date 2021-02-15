@@ -340,7 +340,7 @@ longtiters.colbase <- function(longtiters, longtiters.maxSet, by = 'sr'){
     sr_maxes = c()
     for(sri in unique(longtiters$sr)){
       if (sri %in% longtiters.maxSet$sr){
-        sr_maxes[sri] = max(logtiter.toPlot(titer.toLog(filter(longtiters.maxSet, sr == sri)$titer)))
+        sr_maxes[sri] = max(logtiter.toPlot(titer.toLog(filter(longtiters.maxSet, sr == sri)$titer)), na.rm = T)
       }
       else{
         warning('Serum ', sr, ' not present in maxSet titer table - max titer from target titer table being used.')
@@ -360,7 +360,7 @@ longtiters.colbase <- function(longtiters, longtiters.maxSet, by = 'sr'){
     ag_maxes = c()
     for(agi in unique(longtiters$ag)){
       if (agi %in% longtiters.maxSet$ag){
-        ag_maxes[agi] = max(logtiter.toPlot(titer.toLog(filter(longtiters.maxSet, ag == agi)$titer)))
+        ag_maxes[agi] = max(logtiter.toPlot(titer.toLog(filter(longtiters.maxSet, ag == agi)$titer)), na.rm = T)
       }
       else{
         warning('Antigen ', ag, ' not present in maxSet titer table - max titer from target titer table being used.')
